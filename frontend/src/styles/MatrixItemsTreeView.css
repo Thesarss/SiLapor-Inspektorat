@@ -1,0 +1,383 @@
+.matrix-tree-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tree-header {
+  padding: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.tree-header h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
+}
+
+.tree-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-item strong {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.tree-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* Tree Group */
+.tree-group {
+  margin-bottom: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.tree-group.pending {
+  border-left: 4px solid #ffa726;
+}
+
+.tree-group.in-progress {
+  border-left: 4px solid #42a5f5;
+}
+
+.tree-group.completed {
+  border-left: 4px solid #66bb6a;
+}
+
+.tree-group:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Group Header */
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  cursor: pointer;
+  user-select: none;
+  background: #f8f9fa;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.group-header:hover {
+  background: #e9ecef;
+}
+
+.group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.expand-icon {
+  font-size: 0.8rem;
+  color: #666;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.group-number {
+  font-weight: 700;
+  color: #667eea;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.group-title {
+  font-weight: 600;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.group-progress {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+  background: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+}
+
+.group-status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.group-status-badge.pending {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.group-status-badge.in-progress {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.group-status-badge.completed {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+/* Group Content */
+.group-content {
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+  }
+}
+
+.group-details {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.detail-row {
+  margin-bottom: 10px;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-row strong {
+  display: block;
+  color: #667eea;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+.detail-row p {
+  margin: 0;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Recommendations List */
+.recommendations-list {
+  margin-top: 15px;
+}
+
+.recommendations-list h4 {
+  margin: 0 0 10px 0;
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.recommendation-item {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recommendation-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  transform: translateX(4px);
+}
+
+.recommendation-item.selected {
+  border-color: #667eea;
+  background: #f3f4ff;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.recommendation-item.pending {
+  border-left: 4px solid #ffa726;
+}
+
+.recommendation-item.submitted {
+  border-left: 4px solid #42a5f5;
+}
+
+.recommendation-item.approved {
+  border-left: 4px solid #66bb6a;
+}
+
+.recommendation-item.rejected {
+  border-left: 4px solid #ef5350;
+}
+
+.rec-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.rec-number {
+  font-weight: 700;
+  color: #667eea;
+  font-size: 0.9rem;
+}
+
+.rec-status {
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.rec-status.pending {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.rec-status.submitted {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.rec-status.approved {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.rec-status.rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.rec-text {
+  margin: 0 0 8px 0;
+  color: #333;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.rec-evidence {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+
+.rec-tindak-lanjut {
+  margin-top: 10px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #667eea;
+}
+
+.rec-tindak-lanjut strong {
+  display: block;
+  color: #667eea;
+  font-size: 0.85rem;
+  margin-bottom: 5px;
+}
+
+.rec-tindak-lanjut p {
+  margin: 0;
+  color: #666;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Scrollbar */
+.tree-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tree-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.tree-content::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
+.tree-content::-webkit-scrollbar-thumb:hover {
+  background: #5568d3;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tree-header {
+    padding: 15px;
+  }
+
+  .tree-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .tree-stats {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .group-header {
+    padding: 12px;
+  }
+
+  .group-title {
+    font-size: 0.9rem;
+  }
+
+  .group-header-right {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+  }
+
+  .recommendation-item {
+    padding: 10px;
+  }
+}

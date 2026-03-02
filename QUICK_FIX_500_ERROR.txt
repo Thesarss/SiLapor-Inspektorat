@@ -1,0 +1,92 @@
+╔══════════════════════════════════════════════════════════════════╗
+║           🔧 QUICK FIX - 500 Error Matrix Review                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+🐛 ERROR:
+   POST /api/matrix/item/{id}/review
+   500 (Internal Server Error)
+
+🔍 KEMUNGKINAN PENYEBAB:
+   • Table matrix_items tidak ada
+   • Column structure salah
+   • Item ID tidak ditemukan
+   • Database connection error
+
+🚀 LANGKAH CEPAT:
+
+   1. DIAGNOSE DATABASE
+      ─────────────────
+      node fix-matrix-review-issue.js
+      
+      Script ini akan cek:
+      ✓ Table exists
+      ✓ Column structure
+      ✓ Sample data
+      ✓ UPDATE query test
+
+   2. RESTART BACKEND (WAJIB!)
+      ────────────────────────
+      cd backend
+      npm run dev
+      
+      Backend sekarang punya logging detail:
+      🔍 Request details
+      ✅ Item found
+      ✅ Update result
+      ❌ Error details
+
+   3. TEST LAGI & PERHATIKAN LOG
+      ──────────────────────────
+      • Buka halaman Review
+      • Klik approve/reject
+      • LIHAT BACKEND CONSOLE untuk log detail
+      • Screenshot error jika masih gagal
+
+📊 INTERPRETASI LOG:
+
+   ✅ SUCCESS:
+   🔍 Matrix Review Request: { itemId: 'xxx', ... }
+   ✅ Matrix item found: { ... }
+   ✅ Update result: { affectedRows: 1 }
+
+   ❌ ITEM NOT FOUND:
+   🔍 Matrix Review Request: { itemId: 'xxx', ... }
+   ❌ Matrix item not found: xxx
+   
+   Solusi: Item tidak ada di database
+   
+   ❌ DATABASE ERROR:
+   ❌ Matrix review error: Error: ER_NO_SUCH_TABLE
+   
+   Solusi: Run migration matrix
+
+🔧 MANUAL CHECK DATABASE:
+
+   mysql -u root -p
+   USE inspektorat_db;
+   
+   -- Cek table ada
+   SHOW TABLES LIKE 'matrix_items';
+   
+   -- Cek struktur
+   DESCRIBE matrix_items;
+   
+   -- Cek data
+   SELECT * FROM matrix_items LIMIT 5;
+
+🆘 JIKA MASIH ERROR:
+
+   Kirim informasi ini:
+   1. Output dari: node fix-matrix-review-issue.js
+   2. Backend console log (saat approve/reject)
+   3. Browser console error (F12)
+   4. Network tab response
+
+📝 FILES CREATED:
+   • fix-matrix-review-issue.js - Diagnostic script
+   • test-matrix-review.js - Test endpoint
+   • FIX_500_ERROR_MATRIX_REVIEW.md - Detailed guide
+
+═══════════════════════════════════════════════════════════════════
+  NEXT: Run diagnostic script, restart backend, test lagi
+═══════════════════════════════════════════════════════════════════

@@ -1,0 +1,139 @@
+╔══════════════════════════════════════════════════════════════╗
+║  ✅ CHECKLIST - Ikuti Langkah Ini                           ║
+╚══════════════════════════════════════════════════════════════╝
+
+LANGKAH 1: START FRONTEND
+──────────────────────────────────────────────────────────────
+[ ] Double-click file: start-frontend.bat
+    
+    Atau manual:
+    [ ] Buka terminal baru
+    [ ] cd frontend
+    [ ] npm run dev
+    
+    ✅ Frontend harus jalan di: http://localhost:5173
+
+
+LANGKAH 2: BUKA BROWSER
+──────────────────────────────────────────────────────────────
+[ ] Buka browser (Chrome/Edge/Firefox)
+[ ] Ketik URL: http://localhost:5173
+[ ] Clear cache: Ctrl + Shift + Delete
+[ ] Refresh: Ctrl + F5
+
+
+LANGKAH 3: TEST LOGIN OPD
+──────────────────────────────────────────────────────────────
+[ ] Klik tombol Login
+[ ] Masukkan:
+    Username: user1
+    Password: password123
+[ ] Klik Login
+[ ] ✅ Harus berhasil login
+
+
+LANGKAH 4: CEK ASSIGNMENT
+──────────────────────────────────────────────────────────────
+[ ] Klik menu "Matrix Audit" di sidebar
+[ ] ✅ Harus muncul assignment "asdjsadj"
+[ ] Lihat detail:
+    - Title: asdjsadj
+    - Total items: 52
+    - Status: pending atau in_progress
+[ ] Klik tombol "Mulai Kerjakan" atau "Lanjut Kerjakan"
+[ ] ✅ Harus masuk ke halaman kerja matrix
+
+
+LANGKAH 5: TEST LOGIN INSPEKTORAT
+──────────────────────────────────────────────────────────────
+[ ] Logout dari akun OPD
+[ ] Login dengan:
+    Username: inspektorat1
+    Password: password123
+[ ] ✅ Harus berhasil login
+
+
+LANGKAH 6: TEST TOMBOL INSPEKTORAT
+──────────────────────────────────────────────────────────────
+[ ] Klik menu "Matrix Audit"
+[ ] ✅ Harus muncul matrix report "asdjsadj"
+[ ] Klik tombol "View Progress"
+    [ ] ✅ Tombol harus bisa diklik
+    [ ] ✅ Harus masuk ke halaman progress
+[ ] Kembali ke Matrix Audit
+[ ] Klik tombol "Lihat Detail"
+    [ ] ✅ Tombol harus bisa diklik
+    [ ] ✅ Harus masuk ke halaman detail
+
+
+LANGKAH 7: VERIFIKASI FINAL
+──────────────────────────────────────────────────────────────
+[ ] ✅ Assignment muncul di OPD
+[ ] ✅ Tombol "View Progress" bisa diklik
+[ ] ✅ Tombol "Lihat Detail" bisa diklik
+[ ] ✅ Navigation bekerja dengan baik
+[ ] ✅ Tidak ada error di console
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  🎉 SELESAI! SISTEM BERFUNGSI DENGAN BAIK!                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+TROUBLESHOOTING
+──────────────────────────────────────────────────────────────
+
+❌ Assignment tidak muncul?
+   → Clear cache (Ctrl + Shift + Delete)
+   → Refresh (Ctrl + F5)
+   → Logout dan login lagi
+
+❌ Tombol tidak bisa diklik?
+   → Restart frontend
+   → Clear cache
+   → Cek console browser (F12)
+
+❌ Backend error?
+   → Cek backend console
+   → Restart backend jika perlu
+
+❌ Frontend tidak start?
+   → cd frontend
+   → npm install
+   → npm run dev
+
+
+AKUN LOGIN
+──────────────────────────────────────────────────────────────
+
+OPD Users (Dinas Pendidikan):
+- user1 / password123
+- pendidikan_staff1 / password123
+- pendidikan_staff2 / password123
+- pendidikan_sekretaris / password123
+- pendidikan_kepala / password123
+
+Inspektorat:
+- inspektorat1 / password123
+
+
+DOKUMENTASI
+──────────────────────────────────────────────────────────────
+
+📄 QUICK_START.txt           → Quick reference
+📄 SISTEM_SIAP_DIGUNAKAN.md  → Dokumentasi lengkap
+📄 OTOMASI_SELESAI.md        → Summary otomasi
+📄 CHECKLIST_USER.txt        → File ini
+
+
+BACKEND STATUS
+──────────────────────────────────────────────────────────────
+
+✅ Backend sudah running di background
+✅ Port: 3000
+✅ Status: OK
+✅ Database: Connected
+✅ Assignments: 5 created
+
+
+SELAMAT MENGGUNAKAN SISTEM! 🎉

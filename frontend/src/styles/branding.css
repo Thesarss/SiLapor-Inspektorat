@@ -1,0 +1,1162 @@
+/* Tanjungpinang Branding Styles */
+
+:root {
+  /* Tanjungpinang Official Colors */
+  --brand-primary: #1e40af;      /* Deep Blue - Official Government */
+  --brand-secondary: #dc2626;    /* Red - Indonesian Flag */
+  --brand-accent: #059669;       /* Green - Prosperity */
+  --brand-gold: #f59e0b;         /* Gold - Excellence */
+  
+  /* Text Colors */
+  --brand-text: #1f2937;
+  --brand-text-light: #6b7280;
+  --brand-text-muted: #9ca3af;
+  
+  /* Background Colors */
+  --brand-bg: #ffffff;
+  --brand-bg-light: #f9fafb;
+  --brand-bg-dark: #111827;
+  
+  /* Gradients */
+  --brand-gradient-primary: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
+  --brand-gradient-secondary: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-gold) 100%);
+  
+  /* Shadows */
+  --brand-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --brand-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --brand-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  /* Typography */
+  --brand-font-family: 'Inter', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  --brand-font-display: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* Logo Component Styles with Enhanced Visual Effects */
+.logo-component {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  container-type: inline-size;
+  contain: layout style;
+  position: relative;
+}
+
+.logo-component::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: var(--brand-gradient-primary);
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.logo-component:hover::before {
+  opacity: 0.1;
+}
+
+.logo-component.loading {
+  opacity: 0.7;
+}
+
+.logo-component.error {
+  opacity: 0.5;
+}
+
+.logo-component img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+  transition: all 0.3s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.logo-component:hover img {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+/* Size variants with responsive scaling */
+.logo-component.size-small {
+  width: 32px;
+  height: 32px;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.logo-component.size-medium {
+  width: 48px;
+  height: 48px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.logo-component.size-large {
+  width: 64px;
+  height: 64px;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.logo-component.size-auto {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Enhanced Fallback text styling */
+.logo-fallback {
+  font-family: var(--brand-font-display);
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  padding: 0.75rem 1rem;
+  background: var(--brand-gradient-primary);
+  border-radius: 8px;
+  box-shadow: var(--brand-shadow-md);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.logo-fallback::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.logo-fallback.size-small {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.5rem;
+}
+
+.logo-fallback.size-medium {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.logo-fallback.size-large {
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Responsive behavior with container queries support */
+@container (max-width: 768px) {
+  .logo-component.responsive {
+    max-width: min(120px, 80vw);
+    max-height: min(48px, 20vh);
+  }
+  
+  .logo-fallback.responsive {
+    font-size: clamp(0.625rem, 2vw, 0.75rem);
+    padding: clamp(0.2rem, 1vw, 0.25rem);
+  }
+}
+
+@container (max-width: 480px) {
+  .logo-component.responsive {
+    max-width: min(100px, 70vw);
+    max-height: min(40px, 15vh);
+  }
+  
+  .logo-fallback.responsive {
+    font-size: clamp(0.5rem, 1.5vw, 0.625rem);
+    padding: clamp(0.15rem, 0.8vw, 0.2rem);
+  }
+}
+
+/* Fallback for browsers without container query support */
+@media (max-width: 768px) {
+  .logo-component.responsive {
+    max-width: min(120px, 80vw);
+    max-height: min(48px, 20vh);
+  }
+  
+  .logo-fallback.responsive {
+    font-size: clamp(0.625rem, 2vw, 0.75rem);
+    padding: clamp(0.2rem, 1vw, 0.25rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-component.responsive {
+    max-width: min(100px, 70vw);
+    max-height: min(40px, 15vh);
+  }
+  
+  .logo-fallback.responsive {
+    font-size: clamp(0.5rem, 1.5vw, 0.625rem);
+    padding: clamp(0.15rem, 0.8vw, 0.2rem);
+  }
+}
+
+/* Responsive scaling for different screen densities */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .logo-component img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Responsive typography scaling */
+@media (max-width: 1200px) {
+  .navbar-brand .app-name {
+    font-size: clamp(1rem, 3vw, 1.25rem);
+  }
+  
+  .navbar-brand .org-name {
+    font-size: clamp(0.625rem, 1.5vw, 0.75rem);
+  }
+}
+
+@media (max-width: 992px) {
+  .navbar-brand .brand-text {
+    line-height: 1.1;
+  }
+  
+  .navbar-brand .app-name {
+    font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+  }
+}
+
+/* Ultra-wide screen optimizations */
+@media (min-width: 1920px) {
+  .logo-component.size-large {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .navbar-brand .app-name {
+    font-size: 1.375rem;
+  }
+  
+  .navbar-brand .org-name {
+    font-size: 0.875rem;
+  }
+}
+
+/* Animation for loading states */
+@keyframes logo-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.logo-component.loading img,
+.logo-component.loading .logo-fallback {
+  animation: logo-pulse 1.5s ease-in-out infinite;
+}
+
+/* Accessibility improvements */
+.logo-component:focus {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.logo-component[role="button"]:hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .logo-component {
+    filter: contrast(1.2);
+  }
+  
+  .logo-fallback {
+    border-width: 3px;
+  }
+}
+
+/* Performance optimizations for image loading */
+.logo-component img[loading="lazy"] {
+  /* Intersection observer polyfill fallback */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.logo-component img[loading="lazy"].loaded,
+.logo-component img:not([loading="lazy"]) {
+  opacity: 1;
+}
+
+/* Optimize for different connection speeds */
+@media (prefers-reduced-data: reduce) {
+  .logo-component img {
+    /* Use smaller images for reduced data preference */
+    image-rendering: optimizeSpeed;
+  }
+  
+  .logo-component.size-large {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Critical resource loading optimization */
+.logo-component.critical {
+  /* For above-the-fold logos */
+  contain: none; /* Allow critical logos to affect layout */
+}
+
+.logo-component.critical img {
+  loading: eager; /* Load immediately for critical logos */
+  fetchpriority: high; /* High priority loading */
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .logo-component,
+  .logo-component img,
+  .logo-fallback {
+    animation: none;
+    transition: none;
+  }
+}
+/* Enhanced Navbar Branding - Integrated with Existing Layout */
+.navbar-brand .brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  height: fit-content;
+}
+
+.navbar-brand .brand-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-brand .navbar-logo {
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  flex-shrink: 0;
+}
+
+.navbar-brand .brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.navbar-brand .app-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: white;
+  font-family: var(--brand-font-display);
+  letter-spacing: 0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}
+
+.navbar-brand .org-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  margin-top: -2px;
+}
+
+/* Enhanced Responsive navbar branding */
+@media (max-width: 1024px) {
+  .navbar-brand .brand-link {
+    padding: 0.4rem 0.75rem;
+    gap: 0.6rem;
+  }
+  
+  .navbar-brand .app-name {
+    font-size: 1.1rem;
+  }
+  
+  .navbar-brand .org-name {
+    font-size: 0.7rem;
+  }
+  
+  .navbar-brand .navbar-logo {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-brand .brand-text {
+    display: none;
+  }
+  
+  .navbar-brand .brand-link {
+    gap: 0;
+    padding: 0.4rem;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    justify-content: center;
+  }
+  
+  .navbar-brand .navbar-logo {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-brand .brand-link {
+    width: 44px;
+    height: 44px;
+    padding: 0.35rem;
+  }
+  
+  .navbar-brand .navbar-logo {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Ensure navbar height consistency */
+.navbar {
+  min-height: 65px;
+  max-height: 65px;
+  align-items: center;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+/* Enhanced Dark theme support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand-bg: #111827;
+    --brand-bg-light: #1f2937;
+    --brand-text: #f9fafb;
+    --brand-text-light: #d1d5db;
+    --brand-text-muted: #9ca3af;
+  }
+  
+  .navbar-brand .brand-link {
+    background: var(--brand-gradient-secondary);
+  }
+  
+  .login-header .login-branding {
+    background: var(--brand-gradient-secondary);
+  }
+  
+  .login-header .login-title h1 {
+    color: white;
+  }
+  
+  .login-header .login-title h2 {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .login-header .login-title h3 {
+    color: var(--brand-gold);
+  }
+  
+  .logo-fallback {
+    background: var(--brand-gradient-secondary);
+    color: white;
+  }
+}
+/* Login Page Branding Styles */
+.login-header .login-branding {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: var(--brand-gradient-primary);
+  border-radius: 16px;
+  box-shadow: var(--brand-shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-header .login-branding::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.login-header .login-logo {
+  max-width: 240px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  position: relative;
+  z-index: 1;
+}
+
+.login-header .login-title {
+  text-align: center;
+  line-height: 1.3;
+  position: relative;
+  z-index: 1;
+}
+
+.login-header .login-title h1 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: white;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: 0.05em;
+  font-family: var(--brand-font-display);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.login-header .login-title h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.login-header .login-title h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--brand-gold);
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(45deg, var(--brand-gold), #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Login page responsive design */
+@media (max-width: 768px) {
+  .login-header .login-branding {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .login-header .login-logo {
+    max-width: 150px;
+  }
+  
+  .login-header .login-title h1 {
+    font-size: 1.75rem;
+  }
+  
+  .login-header .login-title h2 {
+    font-size: 0.875rem;
+  }
+  
+  .login-header .login-title h3 {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-header .login-branding {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .login-header .login-logo {
+    max-width: 120px;
+  }
+  
+  .login-header .login-title h1 {
+    font-size: 1.5rem;
+  }
+  
+  .login-header .login-title h2 {
+    font-size: 0.75rem;
+  }
+  
+  .login-header .login-title h3 {
+    font-size: 0.875rem;
+  }
+}
+
+/* Login page dark theme */
+@media (prefers-color-scheme: dark) {
+  .login-header .login-title h1 {
+    color: var(--brand-secondary, #fbbf24);
+  }
+  
+  .login-header .login-title h2 {
+    color: #e5e7eb;
+  }
+  
+  .login-header .login-title h3 {
+    color: var(--brand-primary, #3b82f6);
+  }
+}
+
+/* Enhanced visual hierarchy */
+.login-header .login-title h1::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand-primary, #1e40af), var(--brand-secondary, #fbbf24));
+  margin: 0.5rem auto;
+  border-radius: 2px;
+}
+
+/* Accessibility improvements */
+.login-header .login-branding:focus-within {
+  outline: 2px solid var(--brand-accent, #059669);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Animation for better UX */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-header .login-branding {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.login-header .login-logo {
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+.login-header .login-title {
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .login-header .login-branding,
+  .login-header .login-logo,
+  .login-header .login-title {
+    animation: none;
+  }
+}
+
+/* Error Boundary and Fallback Styles */
+.branding-error-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: var(--brand-bg-light, #f9fafb);
+  border: 1px solid var(--brand-text-light, #6b7280);
+  border-radius: 4px;
+  font-family: var(--brand-font-family, 'Inter, system-ui, sans-serif');
+  color: var(--brand-text, #1f2937);
+}
+
+.branding-error-fallback .fallback-text {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--brand-primary, #1e40af);
+}
+
+.branding-error-placeholder {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: var(--brand-bg-light, #f9fafb);
+  border: 1px dashed var(--brand-text-light, #6b7280);
+  border-radius: 4px;
+}
+
+.branding-error-placeholder .placeholder-logo {
+  opacity: 0.6;
+  margin-bottom: 0.25rem;
+}
+
+.error-details {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--brand-text-light, #6b7280);
+}
+
+.error-details details {
+  cursor: pointer;
+}
+
+.error-details summary {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.error-details pre {
+  background: #f3f4f6;
+  padding: 0.5rem;
+  border-radius: 2px;
+  font-size: 0.625rem;
+  overflow-x: auto;
+  max-width: 300px;
+}
+
+.retry-button {
+  background: var(--brand-primary, #1e40af);
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 2px;
+  font-size: 0.625rem;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover {
+  background: var(--brand-accent, #059669);
+}
+
+.retry-button:disabled {
+  background: var(--brand-text-light, #6b7280);
+  cursor: not-allowed;
+}
+
+/* Network status indicators */
+.branding-network-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.branding-network-status.online {
+  background: #10b981;
+  color: white;
+}
+
+.branding-network-status.offline {
+  background: #ef4444;
+  color: white;
+}
+
+.branding-network-status.slow {
+  background: #f59e0b;
+  color: white;
+}
+
+/* Loading skeleton for branding components */
+.branding-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading-skeleton 1.5s infinite;
+  border-radius: 4px;
+}
+
+.branding-skeleton.no-animation {
+  animation: none;
+  background: #f0f0f0;
+}
+
+@keyframes loading-skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.branding-skeleton.logo-small {
+  width: 32px;
+  height: 32px;
+}
+
+.branding-skeleton.logo-medium {
+  width: 48px;
+  height: 48px;
+}
+
+.branding-skeleton.logo-large {
+  width: 64px;
+  height: 64px;
+}
+
+.branding-skeleton.text-line-1.small {
+  width: 80px;
+  height: 12px;
+  margin-bottom: 4px;
+}
+
+.branding-skeleton.text-line-1.medium {
+  width: 120px;
+  height: 16px;
+  margin-bottom: 6px;
+}
+
+.branding-skeleton.text-line-1.large {
+  width: 200px;
+  height: 20px;
+  margin-bottom: 8px;
+}
+
+.branding-skeleton.text-line-2.small {
+  width: 60px;
+  height: 10px;
+}
+
+.branding-skeleton.text-line-2.medium {
+  width: 90px;
+  height: 12px;
+}
+
+.branding-skeleton.text-line-2.large {
+  width: 150px;
+  height: 16px;
+}
+
+.branding-skeleton.text-line-3.medium {
+  width: 100px;
+  height: 14px;
+  margin-top: 4px;
+}
+
+/* Skeleton layouts */
+.branding-skeleton-combined {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.branding-skeleton-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-brand-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.navbar-text-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.login-branding-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.login-text-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive skeleton adjustments */
+@media (max-width: 768px) {
+  .navbar-text-skeleton {
+    display: none;
+  }
+  
+  .login-branding-skeleton {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .branding-skeleton.logo-large {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-branding-skeleton {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .branding-skeleton.logo-medium {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Graceful degradation styles */
+.no-js .logo-component {
+  /* Fallback for when JavaScript is disabled */
+  background: var(--brand-primary, #1e40af);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.no-js .logo-component::after {
+  content: 'SILAPOR';
+}
+
+/* High contrast mode support for error states */
+@media (prefers-contrast: high) {
+  .branding-error-fallback,
+  .branding-error-placeholder {
+    border-width: 2px;
+    border-color: currentColor;
+  }
+  
+  .retry-button {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Print styles for branding elements */
+@media print {
+  .branding-error-fallback .fallback-text::after {
+    content: ' (Logo)';
+    font-style: italic;
+  }
+  
+  .branding-error-placeholder {
+    border: 1px solid #000;
+  }
+  
+  .branding-error-placeholder::after {
+    content: '[Logo Placeholder]';
+    font-style: italic;
+  }
+  
+  .error-details,
+  .retry-button,
+  .branding-network-status {
+    display: none;
+  }
+}
+
+/* Enhanced Micro-interactions */
+.logo-component.clickable {
+  cursor: pointer;
+}
+
+.logo-component.clickable:active {
+  transform: scale(0.95);
+}
+
+.navbar-brand .brand-link:active {
+  transform: translateY(0);
+}
+
+/* Focus states for better accessibility */
+.logo-component:focus-visible {
+  outline: 3px solid var(--brand-gold);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.navbar-brand .brand-link:focus-visible {
+  outline: 3px solid var(--brand-gold);
+  outline-offset: 2px;
+}
+
+/* Enhanced loading states */
+.logo-component.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--brand-primary);
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced error states */
+.logo-component.error {
+  position: relative;
+}
+
+.logo-component.error::after {
+  content: '⚠️';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: var(--brand-secondary);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  box-shadow: var(--brand-shadow-md);
+}
+
+/* Performance optimizations for animations */
+@media (prefers-reduced-motion: no-preference) {
+  .logo-component,
+  .navbar-brand .brand-link,
+  .login-header .login-branding {
+    will-change: transform;
+  }
+}
+
+/* Print optimizations */
+@media print {
+  .navbar-brand .brand-link,
+  .login-header .login-branding {
+    background: none !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  
+  .navbar-brand .app-name,
+  .login-header .login-title h1 {
+    color: black !important;
+  }
+  
+  .navbar-brand .org-name,
+  .login-header .login-title h2,
+  .login-header .login-title h3 {
+    color: #666 !important;
+  }
+}
+
+/* High performance mode for low-end devices */
+@media (prefers-reduced-motion: reduce) {
+  .logo-component::before,
+  .navbar-brand .brand-link::before,
+  .login-header .login-branding::before,
+  .logo-fallback::before {
+    display: none;
+  }
+  
+  .logo-component,
+  .navbar-brand .brand-link,
+  .login-header .login-branding,
+  .logo-fallback {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Ultra-wide screen optimizations */
+@media (min-width: 1920px) {
+  .navbar-brand .brand-link {
+    padding: 1rem 1.5rem;
+    gap: 1.25rem;
+  }
+  
+  .navbar-brand .app-name {
+    font-size: 1.5rem;
+  }
+  
+  .navbar-brand .org-name {
+    font-size: 0.9rem;
+  }
+  
+  .login-header .login-title h1 {
+    font-size: 3rem;
+  }
+  
+  .login-header .login-title h2 {
+    font-size: 1.25rem;
+  }
+  
+  .login-header .login-title h3 {
+    font-size: 1.375rem;
+  }
+}
+
+/* Mobile-first responsive improvements */
+@media (max-width: 320px) {
+  .navbar-brand .brand-link {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .navbar-brand .navbar-logo {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .login-header .login-branding {
+    padding: 1.5rem 1rem;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .login-header .login-title h1 {
+    font-size: 1.75rem;
+  }
+  
+  .login-header .login-title h2 {
+    font-size: 0.875rem;
+  }
+  
+  .login-header .login-title h3 {
+    font-size: 1rem;
+  }
+}

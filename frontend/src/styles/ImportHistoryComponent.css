@@ -1,0 +1,268 @@
+.import-history-component {
+  padding: 20px 0;
+}
+
+.import-history-component h2 {
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 20px;
+}
+
+.history-list {
+  margin-bottom: 30px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.history-item {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.history-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 20px;
+}
+
+.history-info h4 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.history-date {
+  margin: 4px 0 0 0;
+  color: #999;
+  font-size: 12px;
+}
+
+.history-stats {
+  display: flex;
+  gap: 16px;
+  white-space: nowrap;
+}
+
+.stat {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: #f5f5f5;
+}
+
+.stat.success {
+  color: #4caf50;
+  background: #e8f5e9;
+}
+
+.stat.error {
+  color: #f44336;
+  background: #ffebee;
+}
+
+.stat.duplicate {
+  color: #ff9800;
+  background: #fff3e0;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-small {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.import-details {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.import-details h3 {
+  color: #333;
+  margin: 20px 0 16px 0;
+  font-size: 16px;
+}
+
+.details-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.detail-card {
+  background: white;
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 4px solid #667eea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #666;
+  font-size: 12px;
+}
+
+.detail-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.detail-value.success {
+  color: #4caf50;
+}
+
+.detail-value.error {
+  color: #f44336;
+}
+
+.detail-value.duplicate {
+  color: #ff9800;
+}
+
+.created-reports-section,
+.failed-rows-section {
+  background: white;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.created-reports-section h4,
+.failed-rows-section h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.reports-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.report-item {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 4px solid #667eea;
+}
+
+.report-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 13px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-status {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+}
+
+.failed-rows-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.failed-row {
+  background: #ffebee;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 4px solid #f44336;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.failed-row:last-child {
+  margin-bottom: 0;
+}
+
+.row-number {
+  background: #f44336;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reason {
+  color: #c62828;
+  margin-left: 12px;
+  flex: 1;
+}
+
+.details-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .history-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .history-stats {
+    width: 100%;
+  }
+
+  .history-actions {
+    width: 100%;
+  }
+
+  .history-actions .btn-small {
+    flex: 1;
+  }
+
+  .details-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-list {
+    grid-template-columns: 1fr;
+  }
+
+  .details-actions {
+    flex-direction: column;
+  }
+
+  .details-actions .btn {
+    width: 100%;
+  }
+}

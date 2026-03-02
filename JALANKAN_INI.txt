@@ -1,0 +1,32 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║  👉 DOUBLE-CLICK FILE INI: restart-all.bat                  ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+Setelah itu:
+
+1. Tunggu 10 detik (servers starting)
+
+2. Buka browser: http://localhost:5173
+
+3. Clear cache: Ctrl + Shift + Delete
+
+4. Refresh: Ctrl + F5
+
+5. Login:
+   - Inspektorat: inspektorat1 / password123
+   - OPD: user1 / password123
+
+6. Test:
+   - Klik "View Progress" → Harus bisa!
+   - Klik "Lihat Detail" → Harus bisa!
+   - Assignment harus muncul!
+
+
+✅ SELESAI!
+
+
+Error masih muncul?
+→ Baca: SOLUSI_ERROR_ROUTING.txt

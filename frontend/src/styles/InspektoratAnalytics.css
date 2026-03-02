@@ -1,0 +1,278 @@
+/* Inspektorat Analytics Component Styles */
+.analytics-section {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.analytics-header {
+  margin-bottom: 25px;
+  border-bottom: 2px solid #ecf0f1;
+  padding-bottom: 15px;
+}
+
+.analytics-header h2 {
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.analytics-header p {
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 14px;
+}
+
+.warning-banner {
+  background: #fff3cd;
+  color: #856404;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border: 1px solid #ffeaa7;
+  font-size: 14px;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.analytics-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.analytics-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.analytics-card.primary {
+  border-left: 4px solid #3498db;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+}
+
+.analytics-card.secondary {
+  border-left: 4px solid #2ecc71;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+}
+
+.analytics-card.accent {
+  border-left: 4px solid #e74c3c;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffebee 100%);
+}
+
+.analytics-card.action {
+  border-left: 4px solid #f39c12;
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff8e1 100%);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.card-icon {
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.metric-row.highlight {
+  background: rgba(52, 152, 219, 0.1);
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 4px 0;
+}
+
+.metric-label {
+  color: #5a6c7d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.metric-value.pending {
+  color: #f39c12;
+}
+
+.metric-value.approved {
+  color: #27ae60;
+}
+
+.metric-value.rejected {
+  color: #e74c3c;
+}
+
+.metric-value.revision {
+  color: #8e44ad;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: white;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.action-btn.primary:hover {
+  background: linear-gradient(135deg, #2980b9, #1f5f8b);
+  transform: translateY(-1px);
+}
+
+.action-btn.secondary {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.action-btn.secondary:hover {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  transform: translateY(-1px);
+}
+
+.action-btn.tertiary {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.action-btn.tertiary:hover {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  transform: translateY(-1px);
+}
+
+.action-badge {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+.error-message {
+  text-align: center;
+  padding: 30px;
+  color: #e74c3c;
+}
+
+.btn-retry {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.btn-retry:hover {
+  background: #2980b9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .analytics-section {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .analytics-card {
+    padding: 15px;
+  }
+  
+  .metric-value {
+    font-size: 16px;
+  }
+  
+  .action-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-header h2 {
+    font-size: 18px;
+  }
+  
+  .card-header h3 {
+    font-size: 14px;
+  }
+  
+  .metric-label {
+    font-size: 13px;
+  }
+  
+  .metric-value {
+    font-size: 14px;
+  }
+}

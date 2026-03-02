@@ -1,0 +1,127 @@
+╔══════════════════════════════════════════════════════════════╗
+║  BACKEND HARUS DI-RESTART SEKARANG!                          ║
+╚══════════════════════════════════════════════════════════════╝
+
+MASALAH:
+--------
+Error 400 masih terjadi karena backend BELUM menggunakan kode terbaru
+yang sudah diperbaiki dengan logging detail.
+
+BUKTI:
+------
+- Test script berhasil (node diagnose-matrix-upload.js) ✅
+- Upload dari frontend gagal ❌
+- Backend console TIDAK menampilkan log detail (🚀 📦 ❌)
+
+KESIMPULAN:
+-----------
+Backend yang digunakan frontend BERBEDA dengan backend yang ditest
+oleh script. Kemungkinan ada 2 proses backend yang berjalan, atau
+backend belum di-restart setelah kode diperbaiki.
+
+SOLUSI - IKUTI LANGKAH INI:
+============================
+
+LANGKAH 1: STOP SEMUA BACKEND
+------------------------------
+Cara 1 (Termudah):
+  1. Buka Task Manager (Ctrl + Shift + Esc)
+  2. Cari semua proses "Node.js"
+  3. Klik kanan → End Task untuk SEMUA proses Node.js
+  4. Pastikan TIDAK ADA lagi proses Node.js yang berjalan
+
+Cara 2 (PowerShell):
+  1. Buka PowerShell sebagai Administrator
+  2. Jalankan: Get-Process node | Stop-Process -Force
+  3. Tunggu sampai selesai
+
+LANGKAH 2: RESTART BACKEND
+---------------------------
+  1. Buka terminal/command prompt BARU
+  2. Jalankan: restart-backend.bat
+  
+  ATAU manual:
+  1. cd backend
+  2. npm run dev
+  
+  3. TUNGGU sampai muncul pesan:
+     "Server running on port 3000"
+  
+  4. JANGAN tutup terminal ini!
+
+LANGKAH 3: VERIFIKASI BACKEND
+------------------------------
+  Buka terminal BARU (jangan tutup backend), jalankan:
+  
+  node verify-backend-running.js
+  
+  Harus muncul:
+  ✅ Backend is running
+  ✅ Matrix API is accessible
+
+LANGKAH 4: TEST DARI FRONTEND
+------------------------------
+  1. Buka browser
+  2. Refresh halaman (Ctrl + F5)
+  3. Login sebagai inspektorat1
+  4. Buka halaman Matrix
+  5. Klik "Upload Matrix"
+  6. Isi form dan pilih file
+  7. Klik "Upload Matrix"
+  
+  8. PENTING: LIHAT BACKEND CONSOLE!
+     Harus muncul log seperti:
+     
+     🚀 UPLOAD-AUTO ENDPOINT HIT - Before multer
+     📦 Multer middleware callback
+     ✅ Multer processed successfully
+     
+     Atau jika error:
+     ❌ [Error message yang spesifik]
+
+LANGKAH 5: JIKA MASIH ERROR
+----------------------------
+  Lihat error message di backend console, lalu:
+  
+  Error: "Permission denied"
+  → Login dengan akun inspektorat
+  
+  Error: "File tidak ditemukan"
+  → Pastikan file sudah dipilih
+  
+  Error: "Missing required fields"
+  → Isi Title dan Target OPD
+  
+  Error: "Tidak dapat mendeteksi kolom"
+  → Cek format Excel (harus ada Temuan, Rekomendasi)
+
+CATATAN PENTING:
+================
+- Backend HARUS di-restart untuk menggunakan kode terbaru
+- Jangan skip langkah 1 (stop semua Node.js)
+- Jangan tutup terminal backend setelah start
+- Lihat backend console saat upload dari frontend
+- Jika TIDAK ada log 🚀 📦 ❌, backend belum restart dengan benar
+
+TROUBLESHOOTING:
+================
+Q: Backend tidak bisa start
+A: Port 3000 mungkin masih dipakai. Stop semua Node.js dan coba lagi.
+
+Q: Log tidak muncul di backend console
+A: Backend belum restart. Ulangi langkah 1-2.
+
+Q: Error "ECONNREFUSED"
+A: Backend tidak running. Cek apakah backend sudah start.
+
+Q: Error masih 400 tapi ada log detail
+A: Bagus! Sekarang kita bisa lihat error spesifiknya. Baca error message
+   di backend console dan fix sesuai error tersebut.
+
+BANTUAN:
+========
+Jika masih stuck setelah restart:
+1. Screenshot backend console output
+2. Screenshot frontend error (Network tab)
+3. Jalankan: node check-backend-logs.js
+4. Share hasilnya

@@ -1,0 +1,10 @@
+<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon version of Tanjungpinang logo -->
+  <circle cx="20" cy="20" r="18" fill="#1e40af" stroke="#fbbf24" stroke-width="2"/>
+  <text x="20" y="16" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8" font-weight="bold">
+    TJP
+  </text>
+  <text x="20" y="26" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="6">
+    KOTA
+  </text>
+</svg>

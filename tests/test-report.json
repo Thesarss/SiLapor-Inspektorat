@@ -1,0 +1,120 @@
+{
+  "summary": {
+    "duration": "6.05",
+    "total": 18,
+    "passed": 18,
+    "failed": 0,
+    "successRate": 100
+  },
+  "details": [
+    {
+      "test": "API health check",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:50.808Z"
+    },
+    {
+      "test": "Frontend accessibility",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:50.919Z"
+    },
+    {
+      "test": "Login as super_admin",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:52.020Z"
+    },
+    {
+      "test": "Login as inspektorat",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:52.434Z"
+    },
+    {
+      "test": "Login as opd",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:52.723Z"
+    },
+    {
+      "test": "Invalid login rejection",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:52.785Z"
+    },
+    {
+      "test": "Database connectivity",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:52.820Z"
+    },
+    {
+      "test": "Unauthorized access protection",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:52.842Z"
+    },
+    {
+      "test": "Rate limiting test",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:53.023Z"
+    },
+    {
+      "test": "Matrix institutions endpoint",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:53.688Z"
+    },
+    {
+      "test": "Matrix auto upload",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:54.102Z"
+    },
+    {
+      "test": "Matrix assignments for OPD",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:54.586Z"
+    },
+    {
+      "test": "Matrix assignment items",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:54.835Z"
+    },
+    {
+      "test": "Import institutions endpoint",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:54.872Z"
+    },
+    {
+      "test": "Evidence metadata endpoint",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:54.950Z"
+    },
+    {
+      "test": "Evidence search endpoint",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:54.993Z"
+    },
+    {
+      "test": "Performance dashboard",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:55.071Z"
+    },
+    {
+      "test": "File size validation",
+      "passed": true,
+      "error": null,
+      "timestamp": "2026-02-26T03:12:56.398Z"
+    }
+  ],
+  "timestamp": "2026-02-26T03:12:56.548Z"
+}
