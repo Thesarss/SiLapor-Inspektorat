@@ -55,6 +55,40 @@ coverage/
 *.temp
 .cache/
 
+# Debug and test scripts (root level only)
+/check-*.js
+/test-*.js
+/debug-*.js
+/diagnose-*.js
+/verify-*.js
+/fix-*.js
+/quick-*.js
+/auto-*.js
+/run-*.js
+/clean-*.js
+/create-test-*.js
+/cleanup-*.js
+
+# Temporary documentation files
+/*.txt
+/SOLUSI_*.txt
+/PERBAIKAN_*.txt
+/CARA_*.txt
+/QUICK_*.txt
+/IKUTI_*.txt
+/RESTART_*.txt
+/CHECKLIST_*.txt
+/SERVICES_*.txt
+/UPLOAD_*.txt
+/TREE_*.txt
+/FIX_*.txt
+
+# Temporary batch files
+/restart-*.bat
+/fix-*.bat
+/auto-*.bat
+/force-*.bat
+
 # Package manager
 package-lock.json
 yarn.lock
