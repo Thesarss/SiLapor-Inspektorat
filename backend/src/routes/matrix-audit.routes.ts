@@ -174,34 +174,100 @@ matrixAuditRouter.get('/statistics', authMiddleware, async (req: AuthRequest, re
     let stats = {};
 
     if (user.role === 'inspektorat' || user.role === 'super_admin') {
-      // Statistics for Inspektorat
-      const [reports, assignments, items] = await Promise.all([
-        query<RowDataPacket[]>('SELECT COUNT(*) as count, mr.status FROM matrix_reports mr WHERE uploaded_by = ? GROUP BY mr.status', [user.id]),
-        query<RowDataPacket[]>('SELECT COUNT(*) as count, ma.status FROM matrix_assignments ma WHERE assigned_by = ? GROUP BY ma.status', [user.id]),
-        query<RowDataPacket[]>('SELECT COUNT(*) as count, mi.status FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ? GROUP BY mi.status', [user.id])
+      // Statistics for Inspektorat - from matrix reports
+      const [totalMatrix, totalItems, completedItems, submittedItems, pendingItems, opdStats] = await Promise.all([
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_reports WHERE uploaded_by = ?', [user.id]),
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ?', [user.id]),
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ? AND mi.status = ?', [user.id, 'approved']),
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ? AND mi.status = ?', [user.id, 'submitted']),
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ? AND mi.status = ?', [user.id, 'pending']),
+        query<RowDataPacket[]>('SELECT COUNT(DISTINCT target_opd) as total_opds, COUNT(DISTINCT CASE WHEN completed_items > 0 THEN target_opd END) as active_opds FROM matrix_reports WHERE uploaded_by = ?', [user.id])
       ]);
 
       stats = {
-        reports: reports.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {}),
-        assignments: assignments.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {}),
-        items: items.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {})
+        totalMatrix: totalMatrix.rows[0]?.count || 0,
+        totalItems: totalItems.rows[0]?.count || 0,
+        completedItems: completedItems.rows[0]?.count || 0,
+        submittedItems: submittedItems.rows[0]?.count || 0,
+        pendingItems: pendingItems.rows[0]?.count || 0,
+        totalOPDs: opdStats.rows[0]?.total_opds || 0,
+        activeOPDs: opdStats.rows[0]?.active_opds || 0
       };
     } else {
-      // Statistics for OPD
+      // Statistics for OPD - from matrix assignments
       const [assignments, items] = await Promise.all([
         query<RowDataPacket[]>('SELECT COUNT(*) as count, ma.status FROM matrix_assignments ma WHERE assigned_to = ? GROUP BY ma.status', [user.id]),
         query<RowDataPacket[]>('SELECT COUNT(*) as count, mi.status FROM matrix_items mi JOIN matrix_assignments ma ON mi.matrix_report_id = ma.matrix_report_id WHERE ma.assigned_to = ? GROUP BY mi.status', [user.id])
       ]);
 
+      const assignmentStats = assignments.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {});
+      const itemStats = items.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {});
+
       stats = {
-        assignments: assignments.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {}),
-        items: items.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {})
+        totalMatrix: Object.values(assignmentStats).reduce((sum: number, val: any) => sum + parseInt(val), 0),
+        totalItems: Object.values(itemStats).reduce((sum: number, val: any) => sum + parseInt(val), 0),
+        completedItems: itemStats['approved'] || 0,
+        submittedItems: itemStats['submitted'] || 0,
+        pendingItems: itemStats['pending'] || 0,
+        totalOPDs: 1,
+        activeOPDs: 1
       };
     }
 
     res.json({
       success: true,
       data: stats
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/matrix/opd-performance - Get OPD performance statistics
+matrixAuditRouter.get('/opd-performance', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user;
+    
+    if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
+      return res.status(403).json({
+        success: false,
+        error: 'Hanya Inspektorat yang dapat melihat performa OPD'
+      });
+    }
+
+    // Get performance data for each OPD
+    const performanceData = await query<RowDataPacket[]>(`
+      SELECT 
+        u.name as opd_name,
+        u.institution,
+        COUNT(DISTINCT ma.id) as total_assignments,
+        COUNT(mi.id) as total_items,
+        SUM(CASE WHEN mi.status = 'approved' THEN 1 ELSE 0 END) as completed_items,
+        SUM(CASE WHEN mi.status = 'submitted' THEN 1 ELSE 0 END) as submitted_items,
+        SUM(CASE WHEN mi.status = 'pending' THEN 1 ELSE 0 END) as pending_items,
+        ROUND(
+          (SUM(CASE WHEN mi.status = 'approved' THEN 1 ELSE 0 END) / COUNT(mi.id)) * 100, 
+          2
+        ) as completion_rate,
+        COALESCE(
+          AVG(DATEDIFF(mi.updated_at, ma.assigned_at)),
+          0
+        ) as avg_response_time
+      FROM users u
+      LEFT JOIN matrix_assignments ma ON ma.assigned_to = u.id
+      LEFT JOIN matrix_reports mr ON ma.matrix_report_id = mr.id
+      LEFT JOIN matrix_items mi ON mi.matrix_report_id = mr.id
+      WHERE u.role = 'opd' 
+        AND u.institution IS NOT NULL
+        AND mr.uploaded_by = ?
+      GROUP BY u.id, u.name, u.institution
+      HAVING total_assignments > 0
+      ORDER BY completion_rate DESC, u.institution
+    `, [user.id]);
+
+    res.json({
+      success: true,
+      data: performanceData.rows
     });
   } catch (error) {
     next(error);

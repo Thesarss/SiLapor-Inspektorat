@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 import { Link } from 'react-router-dom';
 import { AdminAnalyticsComponent } from '../components/AdminAnalyticsComponent';
-import { InspektoratAnalyticsComponent } from '../components/InspektoratAnalyticsComponent';
+import { MatrixAnalyticsComponent } from '../components/MatrixAnalyticsComponent';
 import OPDStatisticsComponent from '../components/OPDStatisticsComponent';
 import { useScrollPosition } from '../hooks/useScrollPosition';
 
@@ -154,7 +154,7 @@ export default function DashboardPage() {
 
       {/* Analytics Section - Different for each role */}
       {isSuperAdmin && <AdminAnalyticsComponent />}
-      {isInspektorat && <InspektoratAnalyticsComponent />}
+      {isInspektorat && <MatrixAnalyticsComponent />}
 
       {/* OPD Statistics Component - Only for OPD users */}
       {!isSuperAdmin && !isInspektorat && <OPDStatisticsComponent />}
