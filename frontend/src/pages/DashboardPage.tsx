@@ -1,106 +1,132 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
-import { Report, DashboardStats } from '../types';
 import { Link } from 'react-router-dom';
 import { AdminAnalyticsComponent } from '../components/AdminAnalyticsComponent';
 import { InspektoratAnalyticsComponent } from '../components/InspektoratAnalyticsComponent';
-import ReportFilterComponent, { ReportFilters } from '../components/ReportFilterComponent';
 import OPDStatisticsComponent from '../components/OPDStatisticsComponent';
 import { useScrollPosition } from '../hooks/useScrollPosition';
 
+interface MatrixReport {
+  id: string;
+  title: string;
+  description?: string;
+  target_opd: string;
+  status: string;
+  total_items: number;
+  completed_items: number;
+  created_at: string;
+}
+
+interface MatrixAssignment {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  progress_percentage: number;
+  assigned_at: string;
+  matrix_report_id: string;
+}
+
+interface MatrixStats {
+  total: number;
+  pending: number;
+  in_progress: number;
+  completed: number;
+}
+
 export default function DashboardPage() {
-  const { isSuperAdmin, isInspektorat, canReviewReports, user } = useAuth();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [reports, setReports] = useState<Report[]>([]);
+  const { isSuperAdmin, isInspektorat, user } = useAuth();
+  const [stats, setStats] = useState<MatrixStats | null>(null);
+  const [matrixData, setMatrixData] = useState<MatrixReport[] | MatrixAssignment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentFilters, setCurrentFilters] = useState<ReportFilters>({});
-  const [showFilters, setShowFilters] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const scrollPositionRef = useRef<number>(0);
 
   // Use scroll position hook
-  const { restoreScrollPosition } = useScrollPosition('dashboard', [currentFilters]);
+  const { restoreScrollPosition } = useScrollPosition('dashboard', [searchTerm, statusFilter]);
 
   useEffect(() => {
     fetchDashboard();
-  }, [canReviewReports, currentFilters]);
+  }, []);
 
-  // Restore scroll position after initial load
   useEffect(() => {
-    if (!loading && isInitialLoad) {
+    if (!loading) {
       restoreScrollPosition();
-      setIsInitialLoad(false);
     }
-  }, [loading, isInitialLoad, restoreScrollPosition]);
+  }, [loading, restoreScrollPosition]);
 
   const fetchDashboard = async () => {
     try {
-      // Save current scroll position before fetching new data (except on initial load)
-      if (!isInitialLoad) {
-        scrollPositionRef.current = window.scrollY;
-      }
-      
       setLoading(true);
       
-      // Build query parameters from filters
-      const params = new URLSearchParams();
-      if (currentFilters.year) params.append('year', currentFilters.year);
-      if (currentFilters.institution) params.append('institution', currentFilters.institution);
-      if (currentFilters.status) params.append('status', currentFilters.status);
-      if (currentFilters.search) params.append('search', currentFilters.search);
-      
-      const endpoint = isSuperAdmin ? '/dashboard/admin' : '/dashboard/user';
-      const queryString = params.toString();
-      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
-      
-      const response = await apiClient.get(url);
-      const data = response.data.data;
-      
-      if (isSuperAdmin) {
-        setStats(data.statistics);
-        setReports(data.recentReports || []);
+      if (isInspektorat || isSuperAdmin) {
+        // Fetch matrix reports for Inspektorat
+        const response = await apiClient.get('/matrix/reports');
+        if (response.data.success) {
+          setMatrixData(response.data.data);
+          
+          // Calculate stats
+          const reports = response.data.data as MatrixReport[];
+          setStats({
+            total: reports.length,
+            pending: reports.filter(r => r.status === 'active' && r.completed_items === 0).length,
+            in_progress: reports.filter(r => r.status === 'active' && r.completed_items > 0 && r.completed_items < r.total_items).length,
+            completed: reports.filter(r => r.completed_items === r.total_items).length
+          });
+        }
       } else {
-        setStats(data.statistics);
-        setReports(data.assignedReports || []);
+        // Fetch matrix assignments for OPD
+        const response = await apiClient.get('/matrix/assignments');
+        if (response.data.success) {
+          setMatrixData(response.data.data);
+          
+          // Calculate stats
+          const assignments = response.data.data as MatrixAssignment[];
+          setStats({
+            total: assignments.length,
+            pending: assignments.filter(a => a.status === 'pending').length,
+            in_progress: assignments.filter(a => a.status === 'in_progress').length,
+            completed: assignments.filter(a => a.status === 'completed').length
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to fetch dashboard:', error);
     } finally {
       setLoading(false);
-      
-      // Restore scroll position after data is loaded (except on initial load)
-      if (!isInitialLoad) {
-        setTimeout(() => {
-          window.scrollTo({
-            top: scrollPositionRef.current,
-            behavior: 'instant'
-          });
-        }, 50);
-      }
     }
-  };
-
-  const handleFilterChange = (filters: ReportFilters) => {
-    // Save current scroll position before applying filters
-    scrollPositionRef.current = window.scrollY;
-    setCurrentFilters(filters);
   };
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      pending: 'Menunggu',
-      in_progress: 'Diproses',
-      approved: 'Disetujui',
-      rejected: 'Ditolak',
-      needs_revision: 'Perlu Revisi'
+      pending: 'Belum Dikerjakan',
+      in_progress: 'Sedang Dikerjakan',
+      completed: 'Selesai',
+      active: 'Aktif'
     };
     return labels[status] || status;
   };
 
-  const hasActiveFilters = Object.values(currentFilters).some(value => value !== undefined && value !== '');
+  const getStatusBadgeClass = (status: string) => {
+    const classes: Record<string, string> = {
+      pending: 'badge-warning',
+      in_progress: 'badge-info',
+      completed: 'badge-success',
+      active: 'badge-primary'
+    };
+    return classes[status] || 'badge-default';
+  };
 
-  if (loading && isInitialLoad) return <div className="loading">Memuat data...</div>;
+  const filteredData = matrixData.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = !statusFilter || item.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  if (loading) return <div className="loading">Memuat data...</div>;
 
   return (
     <div className="dashboard">
@@ -119,10 +145,10 @@ export default function DashboardPage() {
         <h2>Selamat Datang, {user?.name}! 👋</h2>
         <p>
           {isSuperAdmin 
-            ? 'Kelola user accounts dan monitor sistem secara keseluruhan.'
+            ? 'Kelola user accounts dan monitor sistem matrix audit secara keseluruhan.'
             : isInspektorat
-            ? 'Review dan evaluasi laporan dari seluruh OPD.'
-            : 'Buat laporan dan respond terhadap feedback dari Inspektorat.'}
+            ? 'Upload dan monitor matrix audit untuk seluruh OPD.'
+            : 'Kerjakan matrix audit yang ditugaskan dan upload evidence tindak lanjut.'}
         </p>
       </div>
 
@@ -135,93 +161,120 @@ export default function DashboardPage() {
 
       {stats && (
         <div className="stats-grid">
-          <div className="stat-card" onClick={() => handleFilterChange({})}>
-            <h3>📋 Total</h3>
+          <div className="stat-card" onClick={() => setStatusFilter('')}>
+            <h3>📋 Total Matrix</h3>
             <p className="stat-number">{stats.total}</p>
-            <p className="stat-label">Semua laporan</p>
+            <p className="stat-label">Semua matrix</p>
           </div>
-          <div className="stat-card warning" onClick={() => handleFilterChange({ status: 'pending' })}>
-            <h3>⏳ Menunggu</h3>
+          <div className="stat-card warning" onClick={() => setStatusFilter('pending')}>
+            <h3>⏳ Belum Dikerjakan</h3>
             <p className="stat-number">{stats.pending}</p>
-            <p className="stat-label">Belum direview</p>
+            <p className="stat-label">Belum dimulai</p>
           </div>
-          <div className="stat-card success" onClick={() => handleFilterChange({ status: 'approved' })}>
-            <h3>✅ Disetujui</h3>
-            <p className="stat-number">{stats.approved}</p>
+          <div className="stat-card info" onClick={() => setStatusFilter('in_progress')}>
+            <h3>🔄 Sedang Dikerjakan</h3>
+            <p className="stat-number">{stats.in_progress}</p>
+            <p className="stat-label">Dalam progress</p>
+          </div>
+          <div className="stat-card success" onClick={() => setStatusFilter('completed')}>
+            <h3>✅ Selesai</h3>
+            <p className="stat-number">{stats.completed}</p>
             <p className="stat-label">Sudah selesai</p>
-          </div>
-          <div className="stat-card danger" onClick={() => handleFilterChange({ status: 'rejected' })}>
-            <h3>❌ Ditolak</h3>
-            <p className="stat-number">{stats.rejected}</p>
-            <p className="stat-label">Perlu perbaikan</p>
           </div>
         </div>
       )}
 
       <div className="reports-section">
         <div className="section-header">
-          <h2>📁 Daftar Laporan {currentFilters.status && `(${getStatusLabel(currentFilters.status)})`}</h2>
+          <h2>📊 {isInspektorat || isSuperAdmin ? 'Daftar Matrix Audit' : 'Matrix yang Ditugaskan'}</h2>
           <div className="section-actions">
-            <button 
-              className={`btn-filter ${showFilters ? 'active' : ''}`}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              🔍 {showFilters ? 'Sembunyikan Filter' : 'Tampilkan Filter'}
-            </button>
-            {hasActiveFilters && (
-              <button className="btn-secondary" onClick={() => handleFilterChange({})}>
+            <input
+              type="text"
+              placeholder="🔍 Cari matrix..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+            {statusFilter && (
+              <button className="btn-secondary" onClick={() => setStatusFilter('')}>
                 🗑️ Reset Filter
               </button>
             )}
           </div>
         </div>
-
-        {/* Collapsible Filter Section */}
-        <div className={`filter-collapse ${showFilters ? 'show' : ''}`}>
-          <ReportFilterComponent 
-            onFilterChange={handleFilterChange}
-            currentFilters={currentFilters}
-          />
-        </div>
         
-        {loading && !isInitialLoad && (
-          <div className="loading-overlay">
-            <div className="loading-spinner">Memuat data...</div>
-          </div>
-        )}
-        
-        {reports.length === 0 ? (
+        {filteredData.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📭</div>
-            <p>Tidak ada laporan {currentFilters.status ? `dengan status "${getStatusLabel(currentFilters.status)}"` : ''}</p>
+            <p>Tidak ada matrix {statusFilter ? `dengan status "${getStatusLabel(statusFilter)}"` : ''}</p>
           </div>
         ) : (
           <table className="table">
             <thead>
               <tr>
-                <th>Judul Laporan</th>
+                <th>Judul Matrix</th>
+                {(isInspektorat || isSuperAdmin) && <th>Target OPD</th>}
+                <th>Progress</th>
                 <th>Status</th>
                 <th>Tanggal</th>
                 <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {reports.map(report => (
-                <tr key={report.id}>
-                  <td className="font-medium">{report.title}</td>
-                  <td>
-                    <span className={`badge badge-${report.status}`}>
-                      {getStatusLabel(report.status)}
-                    </span>
-                  </td>
-                  <td>{new Date(report.created_at).toLocaleDateString('id-ID')}</td>
-                  <td>
-                    <Link to={`/reports/${report.id}`} className="btn-link">
-                      Lihat Detail
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {filteredData.map(item => {
+                const isReport = 'target_opd' in item;
+                const report = item as MatrixReport;
+                const assignment = item as MatrixAssignment;
+                
+                return (
+                  <tr key={item.id}>
+                    <td className="font-medium">{item.title}</td>
+                    {(isInspektorat || isSuperAdmin) && (
+                      <td>{isReport ? report.target_opd : '-'}</td>
+                    )}
+                    <td>
+                      {isReport ? (
+                        <div className="progress-cell">
+                          <span>{report.completed_items}/{report.total_items}</span>
+                          <div className="mini-progress-bar">
+                            <div 
+                              className="mini-progress-fill" 
+                              style={{ width: `${(report.completed_items / report.total_items) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="progress-cell">
+                          <span>{assignment.progress_percentage}%</span>
+                          <div className="mini-progress-bar">
+                            <div 
+                              className="mini-progress-fill" 
+                              style={{ width: `${assignment.progress_percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`badge ${getStatusBadgeClass(item.status)}`}>
+                        {getStatusLabel(item.status)}
+                      </span>
+                    </td>
+                    <td>{new Date(isReport ? report.created_at : assignment.assigned_at).toLocaleDateString('id-ID')}</td>
+                    <td>
+                      {isReport ? (
+                        <Link to={`/matrix/progress/${report.id}`} className="btn-link">
+                          Lihat Progress
+                        </Link>
+                      ) : (
+                        <Link to={`/matrix/work/${assignment.id}`} className="btn-link">
+                          Kerjakan
+                        </Link>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
