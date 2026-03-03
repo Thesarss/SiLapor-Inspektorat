@@ -22,21 +22,45 @@ export function ApprovalsPage() {
   const fetchAllPendingReviews = async () => {
     try {
       console.log('🔄 Fetching all pending reviews...');
+      console.log('🌐 API URL:', import.meta.env.VITE_API_URL || 'http://localhost:3000/api');
+      
       const response = await apiClient.get('/follow-ups/all-pending');
+      console.log('📊 API Response Status:', response.status);
       console.log('📊 API Response:', response);
       console.log('📊 Response data:', response.data);
+      console.log('📊 Response data.success:', response.data.success);
+      console.log('📊 Response data.data:', response.data.data);
+      console.log('📊 Response data.data type:', typeof response.data.data);
+      console.log('📊 Response data.data is Array:', Array.isArray(response.data.data));
       
       if (response.data.success) {
-        console.log('✅ Reviews loaded:', response.data.data);
-        setAllReviews(response.data.data || []);
+        const reviewsData = response.data.data || [];
+        console.log('✅ Reviews loaded:', reviewsData);
+        console.log('✅ Reviews count:', reviewsData.length);
+        
+        if (reviewsData.length === 0) {
+          console.warn('⚠️  API returned success but data is empty!');
+          console.warn('⚠️  This means no pending reviews in database');
+        }
+        
+        setAllReviews(reviewsData);
       } else {
         console.error('❌ API returned error:', response.data.error);
-        notify.error('Gagal memuat data review');
+        notify.error('Gagal memuat data review: ' + response.data.error);
       }
     } catch (error: any) {
       console.error('❌ Failed to fetch pending reviews:', error);
       console.error('❌ Error response:', error.response);
-      notify.error('Gagal memuat data review');
+      console.error('❌ Error response data:', error.response?.data);
+      console.error('❌ Error response status:', error.response?.status);
+      
+      if (error.response?.status === 404) {
+        notify.error('API endpoint tidak ditemukan');
+      } else if (error.response?.status === 401) {
+        notify.error('Tidak terautentikasi. Silakan login ulang');
+      } else {
+        notify.error('Gagal memuat data review: ' + (error.response?.data?.error || error.message));
+      }
     } finally {
       setLoading(false);
     }
@@ -162,6 +186,52 @@ export function ApprovalsPage() {
     }
   };
 
+  const handleDownloadEvidence = async (itemId: string, filename: string) => {
+    try {
+      const response = await apiClient.get(`/matrix/item/${itemId}/evidence`, {
+        responseType: 'blob'
+      });
+      
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      notify.success('File berhasil diunduh');
+    } catch (error: any) {
+      console.error('Failed to download evidence:', error);
+      notify.error('Gagal mengunduh file evidence');
+    }
+  };
+
+  const handleDownloadEvidenceFile = async (evidenceId: string, filename: string) => {
+    try {
+      const response = await apiClient.get(`/evidence/${evidenceId}/download`, {
+        responseType: 'blob'
+      });
+      
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      notify.success('File berhasil diunduh');
+    } catch (error: any) {
+      console.error('Failed to download evidence file:', error);
+      notify.error('Gagal mengunduh file evidence');
+    }
+  };
+
   const getReviewTypeLabel = (reviewType: string) => {
     const labels: Record<string, string> = {
       'follow_up': '📝 Tindak Lanjut',
@@ -219,9 +289,13 @@ export function ApprovalsPage() {
               {item.evidence_filename && (
                 <div className="evidence-info">
                   <strong>Evidence:</strong> 
-                  <a href={`/api/matrix/item/${item.id}/evidence`} target="_blank" rel="noopener noreferrer">
+                  <button 
+                    onClick={() => handleDownloadEvidence(item.id, item.evidence_filename)}
+                    className="btn-link"
+                    style={{ background: 'none', border: 'none', color: '#3498db', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+                  >
                     📎 {item.evidence_filename}
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
@@ -240,9 +314,13 @@ export function ApprovalsPage() {
                 <div><strong>Tags:</strong> {item.tags.join(', ')}</div>
               )}
               <div className="file-info">
-                <a href={`/api/evidence/${item.id}/download`} target="_blank" rel="noopener noreferrer">
+                <button 
+                  onClick={() => handleDownloadEvidenceFile(item.id, item.original_filename)}
+                  className="btn-link"
+                  style={{ background: 'none', border: 'none', color: '#3498db', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}
+                >
                   📥 Download File
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -283,8 +361,8 @@ export function ApprovalsPage() {
           </div>
 
           <div className="approval-list">
-            {allReviews.map((item) => (
-              <div key={`${item.review_type}-${item.id}`} className="approval-card">
+            {allReviews.map((item, index) => (
+              <div key={`${item.review_type}-${item.id}-${index}`} className="approval-card">
                 <div className="approval-card-header">
                   <h3>{item.report_title || item.matrix_title || item.original_filename || 'Review Item'}</h3>
                   <div className="badges">

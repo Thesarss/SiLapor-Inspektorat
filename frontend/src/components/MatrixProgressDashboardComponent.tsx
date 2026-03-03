@@ -15,6 +15,7 @@ interface ProgressData {
   last_activity_at?: string;
   matrix_title: string;
   matrix_description?: string;
+  matrix_report_id: string;
   target_opd: string;
   opd_user_name: string;
   opd_user_email: string;
@@ -122,7 +123,7 @@ export function MatrixProgressDashboardComponent() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap = {
+    const statusMap: Record<string, { label: string; class: string }> = {
       'pending': { label: '⏳ Pending', class: 'badge-warning' },
       'in_progress': { label: '🔄 In Progress', class: 'badge-info' },
       'completed': { label: '✅ Completed', class: 'badge-success' },
@@ -151,13 +152,7 @@ export function MatrixProgressDashboardComponent() {
     return opds.sort();
   };
 
-  const getUniqueMatrixReports = () => {
-    const reports = [...new Set(progressData.map(item => ({ 
-      id: item.matrix_report_id, 
-      title: item.matrix_title 
-    })))];
-    return reports;
-  };
+
 
   if (loading) {
     return <div className="loading">Memuat data progress matrix...</div>;

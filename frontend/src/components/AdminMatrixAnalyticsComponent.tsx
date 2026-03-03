@@ -26,13 +26,23 @@ interface OPDPerformance {
   avg_response_time: number;
 }
 
-export const MatrixAnalyticsComponent = React.memo(function MatrixAnalyticsComponent() {
+interface InspektoratPerformance {
+  inspektorat_name: string;
+  total_matrix_uploaded: number;
+  total_items_uploaded: number;
+  total_reviews_done: number;
+  avg_review_time: number;
+}
+
+export const AdminMatrixAnalyticsComponent = React.memo(function AdminMatrixAnalyticsComponent() {
   const { user } = useAuth();
   const [stats, setStats] = useState<MatrixStats | null>(null);
   const [opdPerformance, setOpdPerformance] = useState<OPDPerformance[]>([]);
+  const [inspektoratPerformance, setInspektoratPerformance] = useState<InspektoratPerformance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showOPDDetails, setShowOPDDetails] = useState(false);
+  const [showOPDDetails, setShowOPDDetails] = useState(true);
+  const [showInspektoratDetails, setShowInspektoratDetails] = useState(true);
 
   useEffect(() => {
     fetchMatrixAnalytics();
@@ -43,17 +53,22 @@ export const MatrixAnalyticsComponent = React.memo(function MatrixAnalyticsCompo
       setLoading(true);
       setError(null);
       
-      const [statsResponse, performanceResponse] = await Promise.all([
-        apiClient.get('/matrix/statistics'),
-        apiClient.get('/matrix/opd-performance')
-      ]);
-      
+      // Fetch overall statistics
+      const statsResponse = await apiClient.get('/matrix/statistics');
       if (statsResponse.data.success) {
         setStats(statsResponse.data.data);
       }
       
-      if (performanceResponse.data.success) {
-        setOpdPerformance(performanceResponse.data.data);
+      // Fetch OPD performance
+      const opdResponse = await apiClient.get('/matrix/opd-performance');
+      if (opdResponse.data.success) {
+        setOpdPerformance(opdResponse.data.data);
+      }
+      
+      // Fetch Inspektorat performance
+      const inspektoratResponse = await apiClient.get('/matrix/inspektorat-performance');
+      if (inspektoratResponse.data.success) {
+        setInspektoratPerformance(inspektoratResponse.data.data);
       }
     } catch (err: any) {
       console.error('Error fetching matrix analytics:', err);
@@ -97,8 +112,8 @@ export const MatrixAnalyticsComponent = React.memo(function MatrixAnalyticsCompo
   return (
     <div className="matrix-analytics-container">
       <div className="analytics-header">
-        <h2>📊 Analitik Matrix Audit</h2>
-        <p>Statistik matrix audit untuk {user?.name}</p>
+        <h2>📊 Analitik Matrix Audit - Administrator</h2>
+        <p>Monitoring kinerja sistem matrix audit secara keseluruhan</p>
       </div>
 
       {/* Overview Cards */}
@@ -200,15 +215,12 @@ export const MatrixAnalyticsComponent = React.memo(function MatrixAnalyticsCompo
             <Link to="/matrix" className="action-btn primary">
               📋 Kelola Matrix
             </Link>
-            <Link to="/approvals" className="action-btn success">
-              📝 Review Matrix
-              {stats && stats.submittedItems > 0 && (
-                <span className="badge">{stats.submittedItems}</span>
-              )}
+            <Link to="/users" className="action-btn info">
+              👥 Kelola User
             </Link>
             <button 
               onClick={() => setShowOPDDetails(!showOPDDetails)}
-              className="action-btn info"
+              className="action-btn success"
             >
               📊 {showOPDDetails ? 'Sembunyikan' : 'Lihat'} Performa OPD
             </button>
@@ -275,8 +287,8 @@ export const MatrixAnalyticsComponent = React.memo(function MatrixAnalyticsCompo
                         </div>
                       </td>
                       <td className="text-center">
-                        {opd.avg_response_time != null && opd.avg_response_time > 0
-                          ? `${Number(opd.avg_response_time).toFixed(1)} hari` 
+                        {opd.avg_response_time > 0 
+                          ? `${opd.avg_response_time.toFixed(1)} hari` 
                           : '-'}
                       </td>
                     </tr>
@@ -285,6 +297,49 @@ export const MatrixAnalyticsComponent = React.memo(function MatrixAnalyticsCompo
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Inspektorat Performance Table */}
+      {showInspektoratDetails && inspektoratPerformance.length > 0 && (
+        <div className="opd-performance-section">
+          <div className="section-header">
+            <h3>👨‍💼 Performa Inspektorat</h3>
+            <p>Kinerja upload matrix dan review dari setiap Inspektorat</p>
+          </div>
+          
+          <div className="performance-table-container">
+            <table className="performance-table">
+              <thead>
+                <tr>
+                  <th>Inspektorat</th>
+                  <th>Matrix Diupload</th>
+                  <th>Items Diupload</th>
+                  <th>Review Selesai</th>
+                  <th>Rata-rata Waktu Review</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inspektoratPerformance.map((insp, index) => (
+                  <tr key={index}>
+                    <td className="opd-name">
+                      <strong>{insp.inspektorat_name}</strong>
+                    </td>
+                    <td className="text-center">{insp.total_matrix_uploaded}</td>
+                    <td className="text-center">{insp.total_items_uploaded}</td>
+                    <td className="text-center">
+                      <span className="status-badge completed">{insp.total_reviews_done}</span>
+                    </td>
+                    <td className="text-center">
+                      {insp.avg_review_time > 0 
+                        ? `${insp.avg_review_time.toFixed(1)} hari` 
+                        : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

@@ -130,6 +130,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/review-history" className={isActive('/review-history') ? 'active' : ''}>
+                    <div className="nav-link-content">
+                      <span className="nav-icon">📜</span>
+                      <span>Riwayat Review</span>
+                    </div>
+                  </Link>
+                </li>
+                <li>
                   <Link to="/matrix" className={isActive('/matrix') ? 'active' : ''}>
                     <div className="nav-link-content">
                       <span className="nav-icon">📋</span>

@@ -140,6 +140,20 @@ followUpRouter.get('/admin/pending-details', requireInspektorat, async (req: Req
   }
 });
 
+// GET /api/follow-ups/all-reviewed - Get all reviewed items (inspektorat & super_admin)
+followUpRouter.get('/all-reviewed', requireInspektorat, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const allReviewed = await ApprovalService.getAllReviewedItems();
+
+    res.json({
+      success: true,
+      data: allReviewed,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/follow-ups/:id/approve - Approve follow-up (inspektorat & super_admin)
 followUpRouter.post('/:id/approve', requireInspektorat, async (req: Request, res: Response, next: NextFunction) => {
   try {

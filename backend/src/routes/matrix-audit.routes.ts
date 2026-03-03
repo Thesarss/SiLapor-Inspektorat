@@ -200,8 +200,8 @@ matrixAuditRouter.get('/statistics', authMiddleware, async (req: AuthRequest, re
         query<RowDataPacket[]>('SELECT COUNT(*) as count, mi.status FROM matrix_items mi JOIN matrix_assignments ma ON mi.matrix_report_id = ma.matrix_report_id WHERE ma.assigned_to = ? GROUP BY mi.status', [user.id])
       ]);
 
-      const assignmentStats = assignments.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {});
-      const itemStats = items.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {});
+      const assignmentStats: Record<string, number> = assignments.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {});
+      const itemStats: Record<string, number> = items.rows.reduce((acc, row) => ({ ...acc, [row.status]: row.count }), {});
 
       stats = {
         totalMatrix: Object.values(assignmentStats).reduce((sum: number, val: any) => sum + parseInt(val), 0),
@@ -264,6 +264,51 @@ matrixAuditRouter.get('/opd-performance', authMiddleware, async (req: AuthReques
       HAVING total_assignments > 0
       ORDER BY completion_rate DESC, u.institution
     `, [user.id]);
+
+    res.json({
+      success: true,
+      data: performanceData.rows
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/matrix/inspektorat-performance - Get Inspektorat performance statistics
+matrixAuditRouter.get('/inspektorat-performance', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user;
+    
+    if (!user || user.role !== 'super_admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Hanya Super Admin yang dapat melihat performa Inspektorat'
+      });
+    }
+
+    // Get performance data for each Inspektorat
+    const performanceData = await query<RowDataPacket[]>(`
+      SELECT 
+        u.name as inspektorat_name,
+        COUNT(DISTINCT mr.id) as total_matrix_uploaded,
+        COUNT(mi.id) as total_items_uploaded,
+        SUM(CASE WHEN mi.reviewed_by = u.id THEN 1 ELSE 0 END) as total_reviews_done,
+        COALESCE(
+          AVG(CASE 
+            WHEN mi.reviewed_by = u.id AND mi.reviewed_at IS NOT NULL 
+            THEN DATEDIFF(mi.reviewed_at, mi.updated_at)
+            ELSE NULL
+          END),
+          0
+        ) as avg_review_time
+      FROM users u
+      LEFT JOIN matrix_reports mr ON mr.uploaded_by = u.id
+      LEFT JOIN matrix_items mi ON mi.matrix_report_id = mr.id
+      WHERE u.role = 'inspektorat'
+      GROUP BY u.id, u.name
+      HAVING total_matrix_uploaded > 0 OR total_reviews_done > 0
+      ORDER BY total_matrix_uploaded DESC, u.name
+    `);
 
     res.json({
       success: true,
@@ -1097,6 +1142,20 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
       status,
       reviewedBy: user.id
     });
+
+    // Update matrix_reports completed_items count
+    const matrixReportId = checkResult.rows[0].matrix_report_id;
+    await query(`
+      UPDATE matrix_reports mr
+      SET completed_items = (
+        SELECT COUNT(*) 
+        FROM matrix_items mi 
+        WHERE mi.matrix_report_id = mr.id AND mi.status = 'approved'
+      )
+      WHERE mr.id = ?
+    `, [matrixReportId]);
+    
+    console.log('✅ Matrix report progress updated');
 
     res.json({
       success: true,

@@ -76,13 +76,11 @@ export function MatrixPage() {
     if (response.data.success) setAssignments(response.data.data);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      // This function is no longer needed with the new upload component
-    }
+  const handleFileChange = () => {
+    // This function is no longer needed with the new upload component
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUpload = async () => {
     // This function is no longer needed with the new upload component
   };
 

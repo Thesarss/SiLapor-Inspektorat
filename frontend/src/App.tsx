@@ -14,6 +14,7 @@ import { MatrixReviewPage } from './pages/MatrixReviewPage';
 import { CreateReportPage } from './pages/CreateReportPage';
 import { EvidencePage } from './pages/EvidencePage';
 import { PerformancePage } from './pages/PerformancePage';
+import { ReviewHistoryPage } from './pages/ReviewHistoryPage';
 
 // Lazy load heavy pages
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
@@ -60,6 +61,13 @@ function AppRoutes() {
             <Suspense fallback={<PageLoader />}>
               <ApprovalsPage />
             </Suspense>
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/review-history" element={
+        <ProtectedRoute adminOnly>
+          <Layout>
+            <ReviewHistoryPage />
           </Layout>
         </ProtectedRoute>
       } />

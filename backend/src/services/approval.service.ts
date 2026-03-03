@@ -84,6 +84,8 @@ export const ApprovalService = {
     
     const allReviews: any[] = [];
     
+    console.log('🔍 [getAllPendingReviews] Starting to fetch all pending reviews...');
+    
     // Get pending follow-ups
     const followUpsResult = await query(`
       SELECT 
@@ -94,14 +96,17 @@ export const ApprovalService = {
         u.name as user_name,
         u.email as user_email,
         u.institution as user_institution,
+        reviewer.name as reviewer_name,
         'follow_up' as review_type
       FROM follow_ups f
       JOIN reports r ON f.report_id = r.id
       JOIN users u ON f.user_id = u.id
+      LEFT JOIN users reviewer ON f.reviewed_by = reviewer.id
       WHERE f.status = 'pending_approval'
       ORDER BY f.created_at ASC
     `);
     
+    console.log('📝 Follow-ups found:', followUpsResult.rows.length);
     allReviews.push(...followUpsResult.rows);
 
     // Get pending recommendations
@@ -124,32 +129,32 @@ export const ApprovalService = {
       ORDER BY fir.created_at ASC
     `);
     
+    console.log('💡 Recommendations found:', recommendationsResult.rows.length);
     allReviews.push(...recommendationsResult.rows);
 
     // Get submitted matrix items
     try {
       const matrixItemsResult = await query(`
-        SELECT 
+        SELECT DISTINCT
           mi.*,
           mr.title as matrix_title,
           mr.description as matrix_description,
           mr.created_at as matrix_created_at,
-          u.name as user_name,
-          u.email as user_email,
-          u.institution as user_institution,
-          ma.id as assignment_id,
+          mr.target_opd as user_institution,
+          reviewer.name as reviewer_name,
           'matrix_item' as review_type
         FROM matrix_items mi
         JOIN matrix_reports mr ON mi.matrix_report_id = mr.id
-        JOIN matrix_assignments ma ON mr.id = ma.matrix_report_id
-        JOIN users u ON ma.assigned_to = u.id
+        LEFT JOIN users reviewer ON mi.reviewed_by = reviewer.id
         WHERE mi.status = 'submitted'
         ORDER BY mi.created_at ASC
       `);
       
+      console.log('📊 Matrix items found:', matrixItemsResult.rows.length);
+      console.log('📊 Matrix items data:', JSON.stringify(matrixItemsResult.rows, null, 2));
       allReviews.push(...matrixItemsResult.rows);
     } catch (error) {
-      console.log('Matrix items table not available');
+      console.log('⚠️  Matrix items table not available:', error);
     }
 
     // Get pending evidence files
@@ -160,19 +165,124 @@ export const ApprovalService = {
           u.name as user_name,
           u.email as user_email,
           u.institution as user_institution,
+          reviewer.name as reviewer_name,
           'evidence' as review_type
         FROM evidence_files ef
         JOIN users u ON ef.uploaded_by = u.id
+        LEFT JOIN users reviewer ON ef.reviewed_by = reviewer.id
         WHERE ef.status = 'pending'
         ORDER BY ef.uploaded_at ASC
       `);
       
+      console.log('📎 Evidence files found:', evidenceResult.rows.length);
       allReviews.push(...evidenceResult.rows);
+    } catch (error) {
+      console.log('⚠️  Evidence files table not available:', error);
+    }
+    
+    console.log('✅ [getAllPendingReviews] Total reviews found:', allReviews.length);
+    console.log('✅ [getAllPendingReviews] Returning data...');
+    
+    return allReviews;
+  },
+
+  async getAllReviewedItems(): Promise<any[]> {
+    const { query } = await import('../config/database');
+    
+    const allReviewed: any[] = [];
+    
+    // Get reviewed follow-ups
+    const followUpsResult = await query(`
+      SELECT 
+        f.*,
+        r.title as report_title,
+        r.description as report_description,
+        r.created_at as report_created_at,
+        u.name as user_name,
+        u.email as user_email,
+        u.institution as user_institution,
+        reviewer.name as reviewer_name,
+        'follow_up' as review_type
+      FROM follow_ups f
+      JOIN reports r ON f.report_id = r.id
+      JOIN users u ON f.user_id = u.id
+      LEFT JOIN users reviewer ON f.reviewed_by = reviewer.id
+      WHERE f.status IN ('approved', 'rejected')
+      ORDER BY f.reviewed_at DESC
+    `);
+    
+    allReviewed.push(...followUpsResult.rows);
+
+    // Get reviewed recommendations
+    const recommendationsResult = await query(`
+      SELECT 
+        fir.*,
+        fi.temuan as item_description,
+        r.title as report_title,
+        r.description as report_description,
+        r.created_at as report_created_at,
+        u.name as user_name,
+        u.email as user_email,
+        u.institution as user_institution,
+        reviewer.name as reviewer_name,
+        'recommendation' as review_type
+      FROM followup_item_recommendations fir
+      JOIN followup_items fi ON fir.followup_item_id = fi.id
+      JOIN reports r ON fi.report_id = r.id
+      JOIN users u ON r.created_by = u.id
+      LEFT JOIN users reviewer ON fir.reviewed_by = reviewer.id
+      WHERE fir.status IN ('approved', 'rejected')
+      ORDER BY fir.reviewed_at DESC
+    `);
+    
+    allReviewed.push(...recommendationsResult.rows);
+
+    // Get reviewed matrix items
+    try {
+      const matrixItemsResult = await query(`
+        SELECT DISTINCT
+          mi.*,
+          mr.title as matrix_title,
+          mr.description as matrix_description,
+          mr.created_at as matrix_created_at,
+          mr.target_opd as user_institution,
+          reviewer.name as reviewer_name,
+          'matrix_item' as review_type
+        FROM matrix_items mi
+        JOIN matrix_reports mr ON mi.matrix_report_id = mr.id
+        LEFT JOIN users reviewer ON mi.reviewed_by = reviewer.id
+        WHERE mi.status IN ('approved', 'rejected')
+        ORDER BY mi.reviewed_at DESC
+      `);
+      
+      allReviewed.push(...matrixItemsResult.rows);
+    } catch (error) {
+      console.log('Matrix items table not available');
+    }
+
+    // Get reviewed evidence files
+    try {
+      const evidenceResult = await query(`
+        SELECT 
+          ef.*,
+          u.name as user_name,
+          u.email as user_email,
+          u.institution as user_institution,
+          reviewer.name as reviewer_name,
+          'evidence' as review_type
+        FROM evidence_files ef
+        JOIN users u ON ef.uploaded_by = u.id
+        LEFT JOIN users reviewer ON ef.reviewed_by = reviewer.id
+        WHERE ef.status IN ('approved', 'rejected')
+        ORDER BY ef.reviewed_at DESC
+      `);
+      
+      allReviewed.push(...evidenceResult.rows);
     } catch (error) {
       console.log('Evidence files table not available');
     }
     
-    return allReviews;
+    return allReviewed;
   },
 
   async getPendingFollowUps(): Promise<any[]> {
