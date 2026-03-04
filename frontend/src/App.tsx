@@ -1,9 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { NotificationProvider } from './context/NotificationContext';
+import { NotificationProvider, useNotification } from './context/NotificationContext';
 import { BrandingProvider } from './components/branding/BrandingProvider';
 import NotificationInitializer from './components/NotificationInitializer';
+import NotificationSystem from './components/NotificationSystem';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
@@ -183,10 +184,24 @@ function App() {
       <AuthProvider>
         <NotificationProvider>
           <NotificationInitializer />
+          <NotificationSystemWrapper />
           <AppRoutes />
         </NotificationProvider>
       </AuthProvider>
     </BrandingProvider>
+  );
+}
+
+// Wrapper component to access notification context
+function NotificationSystemWrapper() {
+  const { notifications, removeNotification, clearAllNotifications } = useNotification();
+  
+  return (
+    <NotificationSystem
+      notifications={notifications}
+      onRemove={removeNotification}
+      onRemoveAll={clearAllNotifications}
+    />
   );
 }
 
