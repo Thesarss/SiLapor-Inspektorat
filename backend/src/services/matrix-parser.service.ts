@@ -115,25 +115,32 @@ export class MatrixParserService {
 
       // Skip baris yang benar-benar kosong (tidak ada temuan DAN tidak ada rekomendasi)
       if (!temuan && !rekomendasi) {
-        return; // Skip silently
+        return; // Skip silently - lewati baris kosong
       }
 
       // Jika temuan kosong tapi rekomendasi ada, gunakan temuan terakhir
       // Ini untuk handle multiple recommendations per temuan
-      if (!temuan && rekomendasi && lastTemuan) {
-        temuan = lastTemuan;
-        penyebab = lastPenyebab; // Gunakan penyebab yang sama juga
-        warnings.push(`Baris ${rowNumber}: Menggunakan temuan dari baris sebelumnya (multiple recommendations)`);
+      if (!temuan && rekomendasi) {
+        if (lastTemuan) {
+          temuan = lastTemuan;
+          penyebab = lastPenyebab; // Gunakan penyebab yang sama juga
+          warnings.push(`Baris ${rowNumber}: Menggunakan temuan dari baris sebelumnya`);
+        } else {
+          // Jika tidak ada temuan sebelumnya, skip baris ini
+          warnings.push(`Baris ${rowNumber}: Rekomendasi tanpa temuan, baris dilewati`);
+          return;
+        }
       }
 
-      // Validasi data wajib
-      if (!temuan) {
-        errors.push(`Baris ${rowNumber}: Kolom Temuan tidak boleh kosong`);
+      // Jika rekomendasi kosong, skip baris ini (lewati saja)
+      if (!rekomendasi) {
+        warnings.push(`Baris ${rowNumber}: Tidak ada rekomendasi, baris dilewati`);
         return;
       }
 
-      if (!rekomendasi) {
-        errors.push(`Baris ${rowNumber}: Kolom Rekomendasi tidak boleh kosong`);
+      // Jika temuan kosong setelah semua pengecekan, skip
+      if (!temuan) {
+        warnings.push(`Baris ${rowNumber}: Tidak ada temuan, baris dilewati`);
         return;
       }
 
@@ -216,24 +223,31 @@ export class MatrixParserService {
 
       // Skip jika tidak ada temuan DAN tidak ada rekomendasi
       if (!temuan && !rekomendasi) {
-        return;
+        return; // Skip silently - lewati baris kosong
       }
 
       // Jika temuan kosong tapi rekomendasi ada, gunakan temuan terakhir
-      if (!temuan && rekomendasi && lastTemuan) {
-        temuan = lastTemuan;
-        penyebab = lastPenyebab;
-        warnings.push(`Baris ${rowNumber}: Menggunakan temuan dari baris sebelumnya (multiple recommendations)`);
+      if (!temuan && rekomendasi) {
+        if (lastTemuan) {
+          temuan = lastTemuan;
+          penyebab = lastPenyebab;
+          warnings.push(`Baris ${rowNumber}: Menggunakan temuan dari baris sebelumnya`);
+        } else {
+          // Jika tidak ada temuan sebelumnya, skip baris ini
+          warnings.push(`Baris ${rowNumber}: Rekomendasi tanpa temuan, baris dilewati`);
+          return;
+        }
       }
 
-      // Validasi
-      if (!temuan) {
-        errors.push(`Baris ${rowNumber}: Kolom pertama (Temuan) tidak boleh kosong`);
+      // Jika rekomendasi kosong, skip baris ini (lewati saja)
+      if (!rekomendasi) {
+        warnings.push(`Baris ${rowNumber}: Tidak ada rekomendasi, baris dilewati`);
         return;
       }
 
-      if (!rekomendasi) {
-        errors.push(`Baris ${rowNumber}: Kolom ketiga (Rekomendasi) tidak boleh kosong`);
+      // Jika temuan kosong setelah semua pengecekan, skip
+      if (!temuan) {
+        warnings.push(`Baris ${rowNumber}: Tidak ada temuan, baris dilewati`);
         return;
       }
 
