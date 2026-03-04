@@ -99,16 +99,16 @@ ol {
 }
 
 .login-box h1 {
-  color: #2563eb;
+  color: #1e3a8a;
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
 }
 
 .login-box h2 {
-  color: #6b7280;
+  color: #374151;
   font-size: 0.95rem;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .login-footer {
@@ -117,7 +117,7 @@ ol {
   border-top: 1px solid #e5e7eb;
   text-align: center;
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #4b5563;
 }
 
 /* ==================== FORM ==================== */
@@ -129,7 +129,7 @@ ol {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #374151;
+  color: #1f2937;
   font-size: 0.9rem;
 }
 
@@ -459,10 +459,10 @@ form {
 
 .sidebar-header h3 {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -687,9 +687,9 @@ form {
 
 .stat-card h3 {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: #4b5563;
   margin-bottom: 0.5rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .stat-card .stat-number {
@@ -701,7 +701,7 @@ form {
 
 .stat-card .stat-label {
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 .stat-card.warning {
@@ -800,7 +800,7 @@ form {
 }
 
 .report-card-desc {
-  color: #4a5568;
+  color: #1f2937;
   margin-bottom: 1rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -820,7 +820,8 @@ form {
 
 .report-meta .date {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: #4b5563;
+  font-weight: 500;
 }
 
 /* ==================== REPORT DETAIL ==================== */
@@ -938,8 +939,9 @@ form {
 }
 
 .file-size {
-  color: #718096;
+  color: #4b5563;
   font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .file-dropzone {
@@ -966,12 +968,12 @@ form {
 }
 
 .file-dropzone-text {
-  color: #4a5568;
-  font-weight: 500;
+  color: #1f2937;
+  font-weight: 600;
 }
 
 .file-dropzone-hint {
-  color: #718096;
+  color: #4b5563;
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }
@@ -1077,12 +1079,13 @@ form {
 }
 
 .approval-card-meta .date {
-  color: #718096;
+  color: #4b5563;
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .report-desc {
-  color: #4b5563;
+  color: #1f2937;
   margin-bottom: 0.75rem;
   line-height: 1.6;
 }
@@ -1346,8 +1349,9 @@ form {
 }
 
 .empty-state p {
-  color: #6b7280;
+  color: #374151;
   margin-bottom: 1.5rem;
+  font-weight: 500;
 }
 
 

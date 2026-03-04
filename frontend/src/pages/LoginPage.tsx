@@ -67,6 +67,9 @@ export function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="Masukkan password"
+              autoComplete="off"
+              data-lpignore="true"
+              data-form-type="other"
             />
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
