@@ -23,7 +23,7 @@ const upload = multer({
 // GET /api/profile - Get current user profile
 router.get('/', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).user.id; // Changed from userId to id
     const profile = await UserProfileService.getProfile(userId);
 
     res.json({
@@ -38,7 +38,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response, next: NextFu
 // PUT /api/profile - Update profile
 router.put('/', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).user.id; // Changed from userId to id
     const { name, email, department, position } = req.body;
 
     // Filter out undefined values
@@ -63,7 +63,7 @@ router.put('/', authMiddleware, async (req: Request, res: Response, next: NextFu
 // POST /api/profile/change-password - Change password
 router.post('/change-password', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).user.id; // Changed from userId to id
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
     // Validation
@@ -108,7 +108,7 @@ router.post('/change-password', authMiddleware, async (req: Request, res: Respon
 // POST /api/profile/photo - Upload profile photo
 router.post('/photo', authMiddleware, upload.single('photo'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).user.id; // Changed from userId to id
 
     if (!req.file) {
       return res.status(400).json({
@@ -132,7 +132,7 @@ router.post('/photo', authMiddleware, upload.single('photo'), async (req: Reques
 // DELETE /api/profile/photo - Delete profile photo
 router.delete('/photo', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).user.id; // Changed from userId to id
     const result = await UserProfileService.deleteProfilePhoto(userId);
 
     res.json({

@@ -7,19 +7,28 @@ export const UserProfileService = {
   async getProfile(userId: string) {
     const { query } = await import('../config/database');
     
-    const result = await query(
-      `SELECT id, username, email, name, institution, role, department, position, 
-              profile_photo, profile_photo_filename, created_at, updated_at, last_login_at
-       FROM users 
-       WHERE id = ?`,
-      [userId]
-    );
+    try {
+      console.log('Getting profile for userId:', userId);
+      
+      const result = await query(
+        `SELECT id, username, email, name, institution, role, department, position, 
+                profile_photo, profile_photo_filename, created_at, updated_at, last_login_at
+         FROM users 
+         WHERE id = ?`,
+        [userId]
+      );
 
-    if (result.rows.length === 0) {
-      throw new Error('User not found');
+      console.log('Query result:', result);
+
+      if (result.rows.length === 0) {
+        throw new Error('User not found');
+      }
+
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error in getProfile:', error);
+      throw error;
     }
-
-    return result.rows[0];
   },
 
   async updateProfile(userId: string, data: {
