@@ -113,14 +113,19 @@ export class MatrixParserService {
       let penyebab = headerMap.penyebab !== -1 ? (row[headerMap.penyebab]?.toString().trim() || '') : '';
       const rekomendasi = row[headerMap.rekomendasi]?.toString().trim() || '';
 
+      // Bersihkan kode angka dalam kurung sudut seperti <0811>, <0802>, dll
+      temuan = this.cleanCodeNumbers(temuan);
+      penyebab = this.cleanCodeNumbers(penyebab);
+      const cleanRekomendasi = this.cleanCodeNumbers(rekomendasi);
+
       // Skip baris yang benar-benar kosong (tidak ada temuan DAN tidak ada rekomendasi)
-      if (!temuan && !rekomendasi) {
+      if (!temuan && !cleanRekomendasi) {
         return; // Skip silently - lewati baris kosong
       }
 
       // Jika temuan kosong tapi rekomendasi ada, gunakan temuan terakhir
       // Ini untuk handle multiple recommendations per temuan
-      if (!temuan && rekomendasi) {
+      if (!temuan && cleanRekomendasi) {
         if (lastTemuan) {
           temuan = lastTemuan;
           penyebab = lastPenyebab; // Gunakan penyebab yang sama juga
@@ -133,7 +138,7 @@ export class MatrixParserService {
       }
 
       // Jika rekomendasi kosong, skip baris ini (lewati saja)
-      if (!rekomendasi) {
+      if (!cleanRekomendasi) {
         warnings.push(`Baris ${rowNumber}: Tidak ada rekomendasi, baris dilewati`);
         return;
       }
@@ -156,7 +161,7 @@ export class MatrixParserService {
       items.push({
         temuan,
         penyebab,
-        rekomendasi,
+        rekomendasi: cleanRekomendasi,
         rowNumber
       });
     });
@@ -219,7 +224,12 @@ export class MatrixParserService {
 
       let temuan = row[0]?.toString().trim() || '';
       let penyebab = row[1]?.toString().trim() || '';
-      const rekomendasi = row[2]?.toString().trim() || '';
+      let rekomendasi = row[2]?.toString().trim() || '';
+
+      // Bersihkan kode angka dalam kurung sudut
+      temuan = this.cleanCodeNumbers(temuan);
+      penyebab = this.cleanCodeNumbers(penyebab);
+      rekomendasi = this.cleanCodeNumbers(rekomendasi);
 
       // Skip jika tidak ada temuan DAN tidak ada rekomendasi
       if (!temuan && !rekomendasi) {
@@ -275,6 +285,18 @@ export class MatrixParserService {
         rekomendasi: 'Kolom 3'
       }
     };
+  }
+
+  /**
+   * Bersihkan kode angka dalam kurung sudut seperti <0811>, <0802>, dll
+   * Hanya ambil teks, buang angka-angka
+   */
+  private static cleanCodeNumbers(text: string): string {
+    if (!text) return '';
+    
+    // Hapus pola <angka> seperti <0811>, <0802>, <0801>, dll
+    // Pattern: < diikuti angka, diikuti >
+    return text.replace(/<\d+>/g, '').trim();
   }
 
   /**
