@@ -90,20 +90,20 @@ export function PerformanceTableComponent({ type, data, onRefresh }: Performance
                         <div 
                           className="rate-bar"
                           style={{ 
-                            width: `${opd.completion_rate}%`,
-                            backgroundColor: getCompletionColor(opd.completion_rate)
+                            width: `${opd.completion_rate || 0}%`,
+                            backgroundColor: getCompletionColor(opd.completion_rate || 0)
                           }}
                         />
-                        <span className="rate-text">{opd.completion_rate}%</span>
+                        <span className="rate-text">{opd.completion_rate != null ? opd.completion_rate : 0}%</span>
                       </div>
                     </td>
-                    <td>{opd.avg_response_time ? opd.avg_response_time.toFixed(1) : '0.0'}</td>
+                    <td>{opd.avg_response_time != null ? Number(opd.avg_response_time).toFixed(1) : '0.0'}</td>
                     <td>
                       <span 
                         className="status-badge"
-                        style={{ color: getCompletionColor(opd.completion_rate) }}
+                        style={{ color: getCompletionColor(opd.completion_rate || 0) }}
                       >
-                        {getCompletionStatus(opd.completion_rate)}
+                        {getCompletionStatus(opd.completion_rate || 0)}
                       </span>
                     </td>
                   </tr>
@@ -118,8 +118,8 @@ export function PerformanceTableComponent({ type, data, onRefresh }: Performance
           <p>
             Rata-rata Penyelesaian: <strong>
               {opdData.length > 0 
-                ? (opdData.reduce((sum, opd) => sum + opd.completion_rate, 0) / opdData.length).toFixed(2)
-                : 0}%
+                ? (opdData.reduce((sum, opd) => sum + (opd.completion_rate || 0), 0) / opdData.length).toFixed(2)
+                : '0.00'}%
             </strong>
           </p>
         </div>
@@ -164,7 +164,7 @@ export function PerformanceTableComponent({ type, data, onRefresh }: Performance
                   <td>{inspektorat.total_matrix_uploaded}</td>
                   <td>{inspektorat.total_items_uploaded}</td>
                   <td className="completed">{inspektorat.total_reviews_done}</td>
-                  <td>{inspektorat.avg_review_time ? inspektorat.avg_review_time.toFixed(1) : '0.0'}</td>
+                  <td>{inspektorat.avg_review_time != null ? Number(inspektorat.avg_review_time).toFixed(1) : '0.0'}</td>
                 </tr>
               ))}
             </tbody>
