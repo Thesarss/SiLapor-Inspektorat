@@ -1,6 +1,8 @@
 import { Router, Response, NextFunction } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware';
 import { PerformanceService } from '../services/performance.service';
+import { query } from '../config/database';
+import { RowDataPacket } from 'mysql2';
 
 export const performanceRouter = Router();
 
@@ -139,6 +141,47 @@ performanceRouter.get('/system-health', authMiddleware, requireAdminAccess, asyn
         error: result.error
       });
     }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/performance/system-stats - Get system statistics
+performanceRouter.get('/system-stats', authMiddleware, requireAdminAccess, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    // Get system statistics
+    const [reportsResult, matrixResult, usersResult, assignmentsResult] = await Promise.all([
+      query<RowDataPacket[]>('SELECT COUNT(*) as count FROM reports'),
+      query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_reports'),
+      query<RowDataPacket[]>('SELECT COUNT(*) as total, SUM(CASE WHEN role = "opd" THEN 1 ELSE 0 END) as opds, SUM(CASE WHEN role = "inspektorat" THEN 1 ELSE 0 END) as inspektorat FROM users'),
+      query<RowDataPacket[]>('SELECT COUNT(*) as total, SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed FROM matrix_assignments')
+    ]);
+
+    const totalReports = reportsResult.rows[0]?.count || 0;
+    const totalMatrixReports = matrixResult.rows[0]?.count || 0;
+    const totalUsers = usersResult.rows[0]?.total || 0;
+    const totalOPDs = usersResult.rows[0]?.opds || 0;
+    const totalInspektorat = usersResult.rows[0]?.inspektorat || 0;
+    const totalAssignments = assignmentsResult.rows[0]?.total || 0;
+    const completedAssignments = assignmentsResult.rows[0]?.completed || 0;
+    const activeAssignments = totalAssignments - completedAssignments;
+    const overallCompletionRate = totalAssignments > 0 
+      ? Math.round((completedAssignments / totalAssignments) * 100) 
+      : 0;
+
+    res.json({
+      success: true,
+      data: {
+        totalReports,
+        totalMatrixReports,
+        totalOPDs,
+        totalInspektorat,
+        totalUsers,
+        activeAssignments,
+        completedAssignments,
+        overallCompletionRate
+      }
+    });
   } catch (error) {
     next(error);
   }

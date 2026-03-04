@@ -1,0 +1,171 @@
+.performance-table-container {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.table-header-section h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.btn-refresh {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn-refresh:hover {
+  background: #2563eb;
+}
+
+.performance-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.performance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.performance-table thead {
+  background: #f3f4f6;
+}
+
+.performance-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.performance-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.performance-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.opd-name,
+.inspektorat-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.completed {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.submitted {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.pending {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.completion-rate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+}
+
+.rate-bar {
+  height: 8px;
+  border-radius: 4px;
+  transition: width 0.3s;
+  min-width: 2px;
+}
+
+.rate-text {
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 45px;
+}
+
+.status-badge {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.table-summary {
+  display: flex;
+  gap: 24px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.table-summary p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.table-summary strong {
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .performance-table-container {
+    padding: 16px;
+  }
+
+  .table-header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .performance-table {
+    font-size: 0.8rem;
+  }
+
+  .performance-table th,
+  .performance-table td {
+    padding: 8px;
+  }
+
+  .table-summary {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
