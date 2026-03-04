@@ -18,6 +18,15 @@
 - Tingkatkan font-weight untuk teks penting
 - Semua warna sekarang memenuhi WCAG 2.1 Level AA
 
+### 3. Profile Update Error - Undefined Parameters
+**Masalah**: Error "Bind parameters must not contain undefined" saat update profile.
+
+**Solusi**:
+- Backend: Validasi parameter undefined/null sebelum SQL query
+- Backend: Convert empty string ke null untuk optional fields
+- Frontend: Clean data sebelum dikirim (trim whitespace, filter empty)
+- Frontend: Kirim null untuk optional fields yang kosong
+
 ## Perubahan Warna
 
 ### Sebelum → Sesudah
@@ -29,17 +38,25 @@
 - Dan 10+ perubahan lainnya
 
 ## Files Modified
+
+### Fix 1 & 2 (Password & Contrast)
 1. `frontend/src/pages/LoginPage.tsx` - Password input attributes
 2. `frontend/src/index.css` - Color contrast improvements
+
+### Fix 3 (Profile Update)
+1. `backend/src/services/user-profile.service.ts` - Parameter validation
+2. `frontend/src/pages/UserProfilePage.tsx` - Data cleaning
 
 ## Hasil
 ✅ Password breach warning tidak muncul lagi
 ✅ Semua teks mudah dibaca dengan kontras yang baik
 ✅ UI lebih profesional dan modern
 ✅ Memenuhi standar aksesibilitas WCAG 2.1 Level AA
+✅ Profile update berfungsi dengan baik tanpa error
+✅ Handling undefined/null parameters yang benar
 
-## Commit
-- Commit: `96f7592`
-- Message: "fix: Improve UI contrast and disable password breach warning"
-- Pushed to GitHub ✅
+## Commits
+1. Commit: `96f7592` - "fix: Improve UI contrast and disable password breach warning"
+2. Commit: `9277ebc` - "fix: Handle undefined parameters in user profile update"
+- All pushed to GitHub ✅
 
