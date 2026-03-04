@@ -92,7 +92,6 @@ export const UserProfileService = {
     await query(
       `UPDATE users 
        SET password = ?, 
-           password_changed_at = CURRENT_TIMESTAMP,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
       [hashedPassword, userId]
