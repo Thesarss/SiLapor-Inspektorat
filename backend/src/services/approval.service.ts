@@ -224,15 +224,13 @@ export const ApprovalService = {
         u.name as user_name,
         u.email as user_email,
         u.institution as user_institution,
-        reviewer.name as reviewer_name,
         'recommendation' as review_type
       FROM followup_item_recommendations fir
       JOIN followup_items fi ON fir.followup_item_id = fi.id
       JOIN reports r ON fi.report_id = r.id
       JOIN users u ON r.created_by = u.id
-      LEFT JOIN users reviewer ON fir.reviewed_by = reviewer.id
       WHERE fir.status IN ('approved', 'rejected')
-      ORDER BY fir.reviewed_at DESC
+      ORDER BY fir.created_at DESC
     `);
     
     allReviewed.push(...recommendationsResult.rows);

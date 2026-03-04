@@ -16,6 +16,7 @@ import opdStatisticsRouter from './routes/opd-statistics.routes';
 import { matrixAuditRouter } from './routes/matrix-audit.routes';
 import { evidenceRouter } from './routes/evidence.routes';
 import { performanceRouter } from './routes/performance.routes';
+import userProfileRouter from './routes/user-profile.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { 
   securityHeaders, 
@@ -77,6 +78,7 @@ app.use(sanitizeInput);
 
 // Routes with specific rate limiting
 app.use('/api/auth', authRateLimit, authRouter);
+app.use('/api/profile', userProfileRouter);
 app.use('/api/reports', reportRouter);
 app.use('/api/follow-ups', followUpRouter);
 app.use('/api/followup-items', followupItemRouter);

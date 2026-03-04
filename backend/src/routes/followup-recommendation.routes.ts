@@ -110,7 +110,6 @@ router.get('/recommendations/for-review', authMiddleware, async (req: AuthReques
         fir.status,
         fir.created_at,
         fir.updated_at,
-        fir.reviewed_by,
         fir.review_notes,
         fi.temuan,
         fi.penyebab,
@@ -119,13 +118,11 @@ router.get('/recommendations/for-review', authMiddleware, async (req: AuthReques
         r.title as report_title,
         u.name as submitted_by_name,
         u.institution,
-        reviewer.name as reviewed_by_name,
         (SELECT COUNT(*) FROM followup_item_recommendation_files firf WHERE firf.followup_item_recommendation_id = fir.id) as file_count
       FROM followup_item_recommendations fir
       JOIN followup_items fi ON fir.followup_item_id = fi.id
       JOIN reports r ON fi.report_id = r.id
       JOIN users u ON r.assigned_to = u.id
-      LEFT JOIN users reviewer ON fir.reviewed_by = reviewer.id
       WHERE ${whereClause}
       ORDER BY fir.updated_at ASC
       LIMIT ? OFFSET ?

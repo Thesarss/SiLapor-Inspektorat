@@ -70,6 +70,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                'OPD'}
             </span>
           </div>
+          <Link to="/profile" className="btn-profile" title="Profil Saya">
+            👤
+          </Link>
           <button onClick={handleLogout} className="btn-logout">
             Keluar
           </button>
