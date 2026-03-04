@@ -33,21 +33,21 @@ export const UserProfileService = {
     const updates: string[] = [];
     const values: any[] = [];
 
-    if (data.name) {
+    if (data.name !== undefined && data.name !== null) {
       updates.push('name = ?');
       values.push(data.name);
     }
-    if (data.email) {
+    if (data.email !== undefined && data.email !== null) {
       updates.push('email = ?');
       values.push(data.email);
     }
-    if (data.department) {
+    if (data.department !== undefined && data.department !== null) {
       updates.push('department = ?');
-      values.push(data.department);
+      values.push(data.department === '' ? null : data.department);
     }
-    if (data.position) {
+    if (data.position !== undefined && data.position !== null) {
       updates.push('position = ?');
-      values.push(data.position);
+      values.push(data.position === '' ? null : data.position);
     }
 
     if (updates.length === 0) {

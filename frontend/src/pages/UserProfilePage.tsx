@@ -72,7 +72,23 @@ export function UserProfilePage() {
     e.preventDefault();
     
     try {
-      const response = await apiClient.put('/profile', formData);
+      // Filter out empty strings and send as proper values
+      const updateData: any = {};
+      
+      if (formData.name && formData.name.trim()) {
+        updateData.name = formData.name.trim();
+      }
+      if (formData.email && formData.email.trim()) {
+        updateData.email = formData.email.trim();
+      }
+      if (formData.department !== undefined) {
+        updateData.department = formData.department.trim() || null;
+      }
+      if (formData.position !== undefined) {
+        updateData.position = formData.position.trim() || null;
+      }
+
+      const response = await apiClient.put('/profile', updateData);
       setProfile(response.data.data);
       setEditing(false);
       notify.success('Profil berhasil diperbarui');
