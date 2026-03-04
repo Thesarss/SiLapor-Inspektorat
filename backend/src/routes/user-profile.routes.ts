@@ -41,12 +41,14 @@ router.put('/', authMiddleware, async (req: Request, res: Response, next: NextFu
     const userId = (req as any).user.userId;
     const { name, email, department, position } = req.body;
 
-    const updatedProfile = await UserProfileService.updateProfile(userId, {
-      name,
-      email,
-      department,
-      position,
-    });
+    // Filter out undefined values
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (department !== undefined) updateData.department = department;
+    if (position !== undefined) updateData.position = position;
+
+    const updatedProfile = await UserProfileService.updateProfile(userId, updateData);
 
     res.json({
       success: true,
