@@ -47,6 +47,24 @@ interface EvidenceTrackingData {
   latest_evidence_status?: string;
 }
 
+interface AggregatedProgress {
+  matrix_report_id: string;
+  matrix_title: string;
+  matrix_description?: string;
+  target_opd: string;
+  opd_institution: string;
+  inspector_name: string;
+  total_assignments: number;
+  total_items: number;
+  completed_items: number;
+  items_with_evidence: number;
+  evidence_files_count: number;
+  overall_progress: number;
+  assignments: ProgressData[];
+  earliest_assigned: string;
+  latest_activity?: string;
+}
+
 export function MatrixProgressDashboardComponent() {
   const [progressData, setProgressData] = useState<ProgressData[]>([]);
   const [evidenceTracking, setEvidenceTracking] = useState<EvidenceTrackingData[]>([]);
@@ -152,6 +170,59 @@ export function MatrixProgressDashboardComponent() {
     return opds.sort();
   };
 
+  // Aggregate progress by matrix report (combine all PICs)
+  const getAggregatedProgress = (): AggregatedProgress[] => {
+    const grouped = progressData.reduce((acc, item) => {
+      const key = item.matrix_report_id;
+      if (!acc[key]) {
+        acc[key] = {
+          matrix_report_id: item.matrix_report_id,
+          matrix_title: item.matrix_title,
+          matrix_description: item.matrix_description,
+          target_opd: item.target_opd,
+          opd_institution: item.opd_institution,
+          inspector_name: item.inspector_name,
+          total_assignments: 0,
+          total_items: 0,
+          completed_items: 0,
+          items_with_evidence: 0,
+          evidence_files_count: 0,
+          overall_progress: 0,
+          assignments: [],
+          earliest_assigned: item.assigned_at,
+          latest_activity: item.last_activity_at
+        };
+      }
+
+      acc[key].total_assignments += 1;
+      acc[key].total_items += item.total_items;
+      acc[key].completed_items += item.completed_items || 0;
+      acc[key].items_with_evidence += item.items_with_evidence;
+      acc[key].evidence_files_count += item.evidence_files_count;
+      acc[key].assignments.push(item);
+
+      // Track earliest and latest dates
+      if (new Date(item.assigned_at) < new Date(acc[key].earliest_assigned)) {
+        acc[key].earliest_assigned = item.assigned_at;
+      }
+      if (item.last_activity_at && (!acc[key].latest_activity || 
+          new Date(item.last_activity_at) > new Date(acc[key].latest_activity))) {
+        acc[key].latest_activity = item.last_activity_at;
+      }
+
+      return acc;
+    }, {} as Record<string, AggregatedProgress>);
+
+    // Calculate overall progress for each matrix
+    Object.values(grouped).forEach(matrix => {
+      if (matrix.total_items > 0) {
+        matrix.overall_progress = Math.round((matrix.items_with_evidence / matrix.total_items) * 100);
+      }
+    });
+
+    return Object.values(grouped);
+  };
+
 
 
   if (loading) {
@@ -196,18 +267,7 @@ export function MatrixProgressDashboardComponent() {
                 ))}
               </select>
               
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters({...filters, status: e.target.value})}
-                className="filter-select"
-              >
-                <option value="">Semua Status</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-              
-              <button onClick={loadEvidenceTracking} className="btn-filter">
+              <button onClick={() => { loadProgressData(); loadEvidenceTracking(); }} className="btn-filter">
                 🔄 Refresh
               </button>
             </div>
@@ -216,59 +276,60 @@ export function MatrixProgressDashboardComponent() {
           <div className="progress-summary">
             <div className="summary-cards">
               <div className="summary-card">
+                <h4>Total Matrix</h4>
+                <div className="summary-number">{getAggregatedProgress().length}</div>
+              </div>
+              <div className="summary-card">
                 <h4>Total Assignments</h4>
                 <div className="summary-number">{progressData.length}</div>
               </div>
               <div className="summary-card">
-                <h4>Completed</h4>
-                <div className="summary-number completed">
-                  {progressData.filter(item => item.assignment_status === 'completed').length}
-                </div>
-              </div>
-              <div className="summary-card">
-                <h4>In Progress</h4>
+                <h4>Total Items</h4>
                 <div className="summary-number in-progress">
-                  {progressData.filter(item => item.assignment_status === 'in_progress').length}
+                  {getAggregatedProgress().reduce((sum, m) => sum + m.total_items, 0)}
                 </div>
               </div>
               <div className="summary-card">
-                <h4>Pending</h4>
-                <div className="summary-number pending">
-                  {progressData.filter(item => item.assignment_status === 'pending').length}
+                <h4>Items with Evidence</h4>
+                <div className="summary-number completed">
+                  {getAggregatedProgress().reduce((sum, m) => sum + m.items_with_evidence, 0)}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="progress-list">
-            {progressData
-              .filter(item => !filters.target_opd || item.target_opd === filters.target_opd)
-              .filter(item => !filters.status || item.assignment_status === filters.status)
-              .map((item) => (
-              <div key={item.assignment_id} className="progress-card">
+            {getAggregatedProgress()
+              .filter(matrix => !filters.target_opd || matrix.target_opd === filters.target_opd)
+              .map((matrix) => (
+              <div key={matrix.matrix_report_id} className="progress-card">
                 <div className="progress-card-header">
-                  <h4>{item.matrix_title}</h4>
-                  {getStatusBadge(item.assignment_status)}
+                  <h4>{matrix.matrix_title}</h4>
+                  <span className="assignment-count">{matrix.total_assignments} PIC</span>
                 </div>
                 
                 <div className="progress-details">
                   <div className="progress-info">
                     <div className="info-row">
                       <span className="label">🏢 OPD:</span>
-                      <span>{item.target_opd}</span>
+                      <span className="info-value">{matrix.target_opd}</span>
                     </div>
                     <div className="info-row">
-                      <span className="label">👤 PIC:</span>
-                      <span>{item.opd_user_name} ({item.opd_user_email})</span>
+                      <span className="label">🏛️ Institusi:</span>
+                      <span className="info-value">{matrix.opd_institution}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="label">👔 Inspector:</span>
+                      <span className="info-value">{matrix.inspector_name}</span>
                     </div>
                     <div className="info-row">
                       <span className="label">📅 Assigned:</span>
-                      <span>{formatDate(item.assigned_at)}</span>
+                      <span className="info-value">{formatDate(matrix.earliest_assigned)}</span>
                     </div>
-                    {item.last_activity_at && (
+                    {matrix.latest_activity && (
                       <div className="info-row">
                         <span className="label">🕒 Last Activity:</span>
-                        <span>{formatDate(item.last_activity_at)}</span>
+                        <span className="info-value">{formatDate(matrix.latest_activity)}</span>
                       </div>
                     )}
                   </div>
@@ -276,14 +337,14 @@ export function MatrixProgressDashboardComponent() {
                   <div className="progress-stats">
                     <div className="progress-bar-container">
                       <div className="progress-label">
-                        Progress: {item.progress_percentage}%
+                        Overall Progress: {matrix.overall_progress}%
                       </div>
                       <div className="progress-bar">
                         <div 
                           className="progress-fill"
                           style={{ 
-                            width: `${item.progress_percentage}%`,
-                            backgroundColor: getProgressColor(item.progress_percentage)
+                            width: `${matrix.overall_progress}%`,
+                            backgroundColor: getProgressColor(matrix.overall_progress)
                           }}
                         ></div>
                       </div>
@@ -291,27 +352,54 @@ export function MatrixProgressDashboardComponent() {
                     
                     <div className="stats-grid">
                       <div className="stat-item">
-                        <span className="stat-number">{item.items_with_evidence}</span>
+                        <span className="stat-number">{matrix.items_with_evidence}</span>
                         <span className="stat-label">Items with Evidence</span>
                       </div>
                       <div className="stat-item">
-                        <span className="stat-number">{item.total_items}</span>
+                        <span className="stat-number">{matrix.total_items}</span>
                         <span className="stat-label">Total Items</span>
                       </div>
                       <div className="stat-item">
-                        <span className="stat-number">{item.evidence_files_count}</span>
+                        <span className="stat-number">{matrix.evidence_files_count}</span>
                         <span className="stat-label">Evidence Files</span>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Show individual PICs in collapsed section */}
+                <details className="pic-details">
+                  <summary className="pic-summary">
+                    👥 Lihat Detail {matrix.total_assignments} PIC
+                  </summary>
+                  <div className="pic-list">
+                    {matrix.assignments.map((assignment) => (
+                      <div key={assignment.assignment_id} className="pic-item">
+                        <div className="pic-info">
+                          <strong>{assignment.opd_user_name}</strong>
+                          <span className="pic-email">{assignment.opd_user_email}</span>
+                        </div>
+                        <div className="pic-stats">
+                          <span>{assignment.items_with_evidence}/{assignment.total_items} items</span>
+                          {getStatusBadge(assignment.assignment_status)}
+                        </div>
+                        <Link 
+                          to={`/matrix/review/${assignment.assignment_id}`}
+                          className="btn-review-small"
+                        >
+                          🔍 Review
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </details>
                 
                 <div className="progress-actions">
                   <Link 
-                    to={`/matrix/review/${item.assignment_id}`}
+                    to={`/matrix/${matrix.matrix_report_id}`}
                     className="btn-review"
                   >
-                    🔍 Review Items
+                    📊 Lihat Semua Items
                   </Link>
                 </div>
               </div>

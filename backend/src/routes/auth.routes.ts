@@ -125,6 +125,22 @@ authRouter.get('/me', authMiddleware, async (req: Request, res: Response, next: 
   }
 });
 
+// GET /api/auth/institutions - Get list of institutions from existing users
+authRouter.get('/institutions',
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const institutions = await AuthService.getInstitutions();
+      res.json({
+        success: true,
+        data: institutions,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // GET /api/auth/users - Get all users (for admin to assign reports)
 authRouter.get('/users', 
   authMiddleware, 

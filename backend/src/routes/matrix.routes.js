@@ -343,3 +343,74 @@ matrixRouter.get('/assignments', simpleAuth, async (req, res, next) => {
 });
 
 module.exports = { matrixRouter };
+
+
+// GET /api/matrix/evidence/metadata - Get metadata for evidence filters
+matrixRouter.get('/evidence/metadata', simpleAuth, async (req, res, next) => {
+  try {
+    const { query: dbQuery } = require('../config/database');
+    
+    // Get unique matrix titles
+    const titlesResult = await dbQuery(`
+      SELECT DISTINCT mr.title 
+      FROM matrix_reports mr
+      ORDER BY mr.title
+    `);
+    
+    // Get unique target OPDs
+    const opdsResult = await dbQuery(`
+      SELECT DISTINCT mr.target_opd 
+      FROM matrix_reports mr
+      WHERE mr.target_opd IS NOT NULL AND mr.target_opd != ''
+      ORDER BY mr.target_opd
+    `);
+    
+    res.json({
+      success: true,
+      data: {
+        matrixTitles: titlesResult.rows.map(r => r.title),
+        targetOPDs: opdsResult.rows.map(r => r.target_opd)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/matrix/evidence/search - Search evidence files
+matrixRouter.get('/evidence/search', simpleAuth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    const { EvidenceService } = require('../services/evidence.service');
+    
+    const filters = {
+      search: req.query.search,
+      matrix_title: req.query.matrix_title,
+      target_opd: req.query.target_opd,
+      status: req.query.status,
+      uploaded_by: req.query.uploaded_by,
+      date_from: req.query.date_from,
+      date_to: req.query.date_to,
+      page: req.query.page ? parseInt(req.query.page) : 1,
+      limit: req.query.limit ? parseInt(req.query.limit) : 20,
+      sort_by: req.query.sort_by || 'uploaded_at',
+      sort_order: req.query.sort_order || 'DESC'
+    };
+    
+    const result = await EvidenceService.searchEvidence(filters, user.id, user.role);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        data: result.data
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.error
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+});

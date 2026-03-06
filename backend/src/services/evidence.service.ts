@@ -358,7 +358,7 @@ export class EvidenceService {
       let whereConditions: string[] = [];
       let queryParams: any[] = [];
       
-      // Base query with joins
+      // Base query with joins - Use DISTINCT to avoid duplicates
       let baseQuery = `
         FROM evidence_files ef
         LEFT JOIN users u1 ON ef.uploaded_by = u1.id
@@ -430,8 +430,8 @@ export class EvidenceService {
         ? 'WHERE ' + whereConditions.join(' AND ')
         : '';
       
-      // Count total records
-      const countQuery = `SELECT COUNT(*) as total ${baseQuery} ${whereClause}`;
+      // Count total records - Use DISTINCT to avoid counting duplicates
+      const countQuery = `SELECT COUNT(DISTINCT ef.id) as total ${baseQuery} ${whereClause}`;
       const countResult = await query<RowDataPacket[]>(countQuery, queryParams);
       const total = countResult.rows[0].total;
       
@@ -444,15 +444,27 @@ export class EvidenceService {
       const sortBy = filters.sort_by || 'uploaded_at';
       const sortOrder = filters.sort_order || 'DESC';
       
-      // Main query
+      // Main query - Use DISTINCT to avoid duplicate rows
       const mainQuery = `
-        SELECT 
-          ef.*,
+        SELECT DISTINCT
+          ef.id,
+          ef.matrix_item_id,
+          ef.original_filename as evidence_filename,
+          ef.file_size as evidence_file_size,
+          ef.file_path as evidence_file_path,
+          ef.status,
+          ef.uploaded_at,
+          ef.reviewed_at,
+          ef.review_notes,
           u1.name as uploaded_by_name,
           u1.institution as uploader_institution,
           u2.name as reviewed_by_name,
+          mi.item_number,
           mi.temuan,
+          mi.penyebab,
           mi.rekomendasi,
+          mi.tindak_lanjut,
+          mr.id as matrix_report_id,
           mr.title as matrix_title,
           mr.target_opd
         ${baseQuery}

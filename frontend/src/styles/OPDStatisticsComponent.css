@@ -1,5 +1,5 @@
 .opd-statistics-component {
-  padding: 1.5rem;
+  padding: 1rem;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -49,7 +49,7 @@
 
 /* My OPD Statistics */
 .my-opd-statistics {
-  max-width: 800px;
+  width: 100%;
 }
 
 .opd-header {
@@ -86,7 +86,7 @@
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -309,59 +309,6 @@
   margin-bottom: 1rem;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .opd-statistics-component {
-    padding: 1rem;
-  }
-  
-  .statistics-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-  
-  .opd-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .progress-item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
-  
-  .progress-item label {
-    min-width: auto;
-  }
-  
-  .progress-text {
-    text-align: left;
-  }
-  
-  .opd-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .ranking-item {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
-  }
-  
-  .ranking-stats {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
-
-
 /* Matrix Statistics Section */
 .matrix-stats-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -441,19 +388,77 @@
 }
 
 .status-item.pending {
-  background: rgba(241, 196, 15, 0.2);
-  color: #f1c40f;
+  background: rgba(241, 196, 15, 1);
+  color: #ffffff;
   border: 1px solid rgba(241, 196, 15, 0.3);
 }
 
 .status-item.in-progress {
-  background: rgba(52, 152, 219, 0.2);
-  color: #3498db;
+  background: rgba(52, 152, 219, 1);
+  color: #ffffff;
   border: 1px solid rgba(52, 152, 219, 0.3);
 }
 
 .status-item.completed {
-  background: rgba(39, 174, 96, 0.2);
-  color: #27ae60;
+  background: rgba(39, 174, 96, 1);
+  color: #ffffff;
   border: 1px solid rgba(39, 174, 96, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .opd-statistics-component {
+    padding: 1rem;
+  }
+  
+  .statistics-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .opd-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .progress-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .progress-item label {
+    min-width: auto;
+  }
+  
+  .progress-text {
+    text-align: left;
+  }
+  
+  .opd-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ranking-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .ranking-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }

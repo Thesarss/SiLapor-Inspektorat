@@ -23,6 +23,7 @@ interface EditUserForm {
 export function UserManagementPage() {
   const { isAdmin } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
+  const [institutions, setInstitutions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -52,6 +53,7 @@ export function UserManagementPage() {
       return;
     }
     fetchUsers();
+    fetchInstitutions();
   }, [isAdmin]);
 
   const fetchUsers = async () => {
@@ -62,6 +64,15 @@ export function UserManagementPage() {
       setError('Gagal memuat data user');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInstitutions = async () => {
+    try {
+      const response = await apiClient.get('/auth/institutions');
+      setInstitutions(response.data.data || []);
+    } catch (error: any) {
+      console.error('Gagal memuat daftar institusi:', error);
     }
   };
 
@@ -244,11 +255,22 @@ export function UserManagementPage() {
                   <label>Institusi {createForm.role === 'user' && '*'}</label>
                   <input
                     type="text"
+                    list="institutions-list"
                     value={createForm.institution}
                     onChange={(e) => setCreateForm({ ...createForm, institution: e.target.value })}
                     required={createForm.role === 'user'}
-                    placeholder="Masukkan nama institusi/OPD"
+                    placeholder="Pilih atau ketik nama institusi/OPD"
                   />
+                  <datalist id="institutions-list">
+                    {institutions.map((inst) => (
+                      <option key={inst} value={inst} />
+                    ))}
+                  </datalist>
+                  {institutions.length > 0 && (
+                    <small style={{ color: '#7f8c8d', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
+                      💡 Pilih dari daftar OPD yang sudah ada untuk menghindari kesalahan ketik
+                    </small>
+                  )}
                 </div>
               </div>
 
@@ -316,10 +338,21 @@ export function UserManagementPage() {
                   <label>Institusi</label>
                   <input
                     type="text"
+                    list="institutions-list-edit"
                     value={editForm.institution}
                     onChange={(e) => setEditForm({ ...editForm, institution: e.target.value })}
-                    placeholder="Masukkan nama institusi/OPD"
+                    placeholder="Pilih atau ketik nama institusi/OPD"
                   />
+                  <datalist id="institutions-list-edit">
+                    {institutions.map((inst) => (
+                      <option key={inst} value={inst} />
+                    ))}
+                  </datalist>
+                  {institutions.length > 0 && (
+                    <small style={{ color: '#7f8c8d', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
+                      💡 Pilih dari daftar OPD yang sudah ada untuk menghindari kesalahan ketik
+                    </small>
+                  )}
                 </div>
               </div>
 

@@ -289,14 +289,32 @@ export class MatrixParserService {
 
   /**
    * Bersihkan kode angka dalam kurung sudut seperti <0811>, <0802>, dll
-   * Hanya ambil teks, buang angka-angka
+   * Hanya ambil teks, buang angka-angka dan kode-kode lainnya
    */
   private static cleanCodeNumbers(text: string): string {
     if (!text) return '';
     
-    // Hapus pola <angka> seperti <0811>, <0802>, <0801>, dll
-    // Pattern: < diikuti angka, diikuti >
-    return text.replace(/<\d+>/g, '').trim();
+    let cleaned = text;
+    
+    // 1. Hapus pola <angka> seperti <0811>, <0802>, <0801>, dll
+    cleaned = cleaned.replace(/<\d+>/g, '');
+    
+    // 2. Hapus pola [angka] seperti [0811], [0802], dll
+    cleaned = cleaned.replace(/\[\d+\]/g, '');
+    
+    // 3. Hapus pola (angka) seperti (0811), (0802), dll
+    cleaned = cleaned.replace(/\(\d+\)/g, '');
+    
+    // 4. Hapus pola angka. di awal baris seperti "1.", "2.", "08.11", dll
+    cleaned = cleaned.replace(/^\d+\.?\d*\.?\s*/g, '');
+    
+    // 5. Hapus pola angka-angka seperti "08-11", "08.11", dll di awal
+    cleaned = cleaned.replace(/^[\d\-\.]+\s+/g, '');
+    
+    // 6. Hapus multiple spaces jadi single space
+    cleaned = cleaned.replace(/\s+/g, ' ');
+    
+    return cleaned.trim();
   }
 
   /**

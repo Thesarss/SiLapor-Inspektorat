@@ -464,5 +464,9 @@ export const AuthService = {
     }
 
     return summary;
+  },
+
+  async getInstitutions(): Promise<string[]> {
+    return UserModel.getInstitutions();
   }
 };
