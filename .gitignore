@@ -55,21 +55,17 @@ coverage/
 *.temp
 .cache/
 
-# Debug and test scripts (root level only)
-/check-*.js
-/test-*.js
-/debug-*.js
-/diagnose-*.js
-/verify-*.js
-/fix-*.js
-/quick-*.js
-/auto-*.js
-/run-*.js
-/clean-*.js
-/create-test-*.js
-/cleanup-*.js
+# Debug and test scripts (backend)
+backend/check-*.js
+backend/test-*.js
+backend/debug-*.js
+backend/diagnose-*.js
+backend/verify-*.js
+backend/investigate-*.js
+backend/comprehensive-*.js
+backend/create-test-*.js
 
-# Temporary documentation files
+# Temporary documentation files (root)
 /*.txt
 /SOLUSI_*.txt
 /PERBAIKAN_*.txt
@@ -82,12 +78,34 @@ coverage/
 /UPLOAD_*.txt
 /TREE_*.txt
 /FIX_*.txt
+/ALL_*.md
+/ANALYTICS_*.md
+/CLEANUP_*.md
+/COMPLETE_*.md
+/EVIDENCE_*.md
+/FINAL_*.md
+/FIX_*.md
+/INTERACTIVE_*.md
+/MATRIX_*.md
+/OPD_*.md
+/PERFORMANCE_*.md
+/PROGRESS_*.md
+/QUICK_*.md
+/REVIEW_*.md
+/SESSION_*.md
+/TYPESCRIPT_*.md
+/UI_*.md
+/URGENT_*.md
+/USER_*.md
 
-# Temporary batch files
+# Temporary batch files (root)
 /restart-*.bat
 /fix-*.bat
 /auto-*.bat
 /force-*.bat
+/check-*.bat
+/start-*.bat
+/cleanup-*.bat
 
 # Package manager
 package-lock.json
