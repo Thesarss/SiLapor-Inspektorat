@@ -705,18 +705,12 @@ matrixAuditRouter.get('/evidence/search', authMiddleware, async (req: AuthReques
       limit = '20'
     } = req.query;
 
-    // Build WHERE conditions
+    // Build WHERE conditions - Query from evidence_files to avoid duplication
     const conditions: string[] = [];
     const params: any[] = [];
 
-    // Only show items with evidence
-    conditions.push('mi.evidence_filename IS NOT NULL');
-    conditions.push('mi.evidence_file_path IS NOT NULL');
-    conditions.push('mi.status IN (?, ?, ?)');
-    params.push('submitted', 'approved', 'rejected');
-
     if (search) {
-      conditions.push('(mi.evidence_filename LIKE ? OR mi.temuan LIKE ? OR mi.rekomendasi LIKE ? OR mi.tindak_lanjut LIKE ?)');
+      conditions.push('(ef.original_filename LIKE ? OR mi.temuan LIKE ? OR mi.rekomendasi LIKE ? OR mi.tindak_lanjut LIKE ?)');
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm, searchTerm);
     }
@@ -732,7 +726,7 @@ matrixAuditRouter.get('/evidence/search', authMiddleware, async (req: AuthReques
     }
 
     if (status) {
-      conditions.push('mi.status = ?');
+      conditions.push('ef.status = ?');
       params.push(status);
     }
 
@@ -742,12 +736,12 @@ matrixAuditRouter.get('/evidence/search', authMiddleware, async (req: AuthReques
     }
 
     if (date_from) {
-      conditions.push('DATE(mi.updated_at) >= ?');
+      conditions.push('DATE(ef.uploaded_at) >= ?');
       params.push(date_from);
     }
 
     if (date_to) {
-      conditions.push('DATE(mi.updated_at) <= ?');
+      conditions.push('DATE(ef.uploaded_at) <= ?');
       params.push(date_to);
     }
 
@@ -760,22 +754,22 @@ matrixAuditRouter.get('/evidence/search', authMiddleware, async (req: AuthReques
 
     // Map sort column to actual column name
     const sortColumnMap: Record<string, string> = {
-      'uploaded_at': 'mi.updated_at',
-      'evidence_filename': 'mi.evidence_filename',
+      'uploaded_at': 'ef.uploaded_at',
+      'evidence_filename': 'ef.original_filename',
       'matrix_title': 'mr.title',
       'target_opd': 'mr.target_opd',
-      'status': 'mi.status'
+      'status': 'ef.status'
     };
 
-    const actualSortColumn = sortColumnMap[sortColumn as string] || 'mi.updated_at';
+    const actualSortColumn = sortColumnMap[sortColumn as string] || 'ef.uploaded_at';
 
-    // Get total count
+    // Get total count - Query from evidence_files directly
     const countQuery = `
       SELECT COUNT(*) as total
-      FROM matrix_items mi
-      JOIN matrix_reports mr ON mi.matrix_report_id = mr.id
-      JOIN matrix_assignments ma ON ma.matrix_report_id = mr.id
-      JOIN users u ON ma.assigned_to = u.id
+      FROM evidence_files ef
+      JOIN users u ON ef.uploaded_by = u.id
+      LEFT JOIN matrix_items mi ON ef.matrix_item_id = mi.id
+      LEFT JOIN matrix_reports mr ON mi.matrix_report_id = mr.id
       ${whereClause}
     `;
 
@@ -788,33 +782,34 @@ matrixAuditRouter.get('/evidence/search', authMiddleware, async (req: AuthReques
     const offset = (pageNum - 1) * limitNum;
     const pages = Math.ceil(total / limitNum);
 
-    // Get evidence data
+    // Get evidence data - Query from evidence_files directly (no JOIN with assignments)
     const dataQuery = `
       SELECT 
-        mi.id,
+        ef.id,
+        ef.matrix_item_id,
+        ef.original_filename as evidence_filename,
+        ef.file_size as evidence_file_size,
+        ef.file_path as evidence_file_path,
+        ef.status,
+        ef.uploaded_at,
+        ef.reviewed_at,
+        ef.description as review_notes,
+        u.name as uploaded_by_name,
+        u.institution as uploader_institution,
+        reviewer.name as reviewed_by_name,
         mi.matrix_report_id,
-        mr.title as matrix_title,
-        mr.target_opd,
         mi.item_number,
         mi.temuan,
         mi.penyebab,
         mi.rekomendasi,
         mi.tindak_lanjut,
-        mi.evidence_filename,
-        mi.evidence_file_size,
-        mi.evidence_file_path,
-        mi.status,
-        mi.updated_at as uploaded_at,
-        u.name as uploaded_by_name,
-        u.institution as uploader_institution,
-        reviewer.name as reviewed_by_name,
-        mi.reviewed_at,
-        mi.review_notes
-      FROM matrix_items mi
-      JOIN matrix_reports mr ON mi.matrix_report_id = mr.id
-      JOIN matrix_assignments ma ON ma.matrix_report_id = mr.id
-      JOIN users u ON ma.assigned_to = u.id
-      LEFT JOIN users reviewer ON mi.reviewed_by = reviewer.id
+        mr.title as matrix_title,
+        mr.target_opd
+      FROM evidence_files ef
+      JOIN users u ON ef.uploaded_by = u.id
+      LEFT JOIN users reviewer ON ef.reviewed_by = reviewer.id
+      LEFT JOIN matrix_items mi ON ef.matrix_item_id = mi.id
+      LEFT JOIN matrix_reports mr ON mi.matrix_report_id = mr.id
       ${whereClause}
       ORDER BY ${actualSortColumn} ${sortDirection}
       LIMIT ? OFFSET ?
