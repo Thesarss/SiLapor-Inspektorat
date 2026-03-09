@@ -225,19 +225,39 @@ export class EvidenceService {
    */
   static async updateAssignmentProgress(assignmentId: string): Promise<void> {
     try {
-      // Calculate progress
+      // Get assignment details first
+      const assignmentResult = await query(`
+        SELECT assigned_to, matrix_report_id
+        FROM matrix_assignments
+        WHERE id = ?
+      `, [assignmentId]);
+      
+      if (assignmentResult.rows.length === 0) {
+        return;
+      }
+      
+      const { assigned_to, matrix_report_id } = assignmentResult.rows[0];
+      
+      // Calculate progress based on evidence uploaded by THIS specific user
       const progressResult = await query(`
         SELECT 
-          COUNT(mi.id) as total_items,
-          COUNT(CASE WHEN mi.evidence_submitted = TRUE THEN 1 END) as items_with_evidence,
-          ROUND((COUNT(CASE WHEN mi.evidence_submitted = TRUE THEN 1 END) / COUNT(mi.id)) * 100, 2) as progress_percentage
-        FROM matrix_assignments ma
-        JOIN matrix_items mi ON mi.matrix_report_id = ma.matrix_report_id
-        WHERE ma.id = ?
-      `, [assignmentId]);
+          COUNT(DISTINCT mi.id) as total_items,
+          COUNT(DISTINCT CASE 
+            WHEN EXISTS (
+              SELECT 1 FROM evidence_files ef 
+              WHERE ef.matrix_item_id = mi.id 
+              AND ef.uploaded_by = ?
+            ) THEN mi.id 
+          END) as items_with_evidence
+        FROM matrix_items mi
+        WHERE mi.matrix_report_id = ?
+      `, [assigned_to, matrix_report_id]);
       
       if (progressResult.rows.length > 0) {
         const progress = progressResult.rows[0];
+        const progressPercentage = progress.total_items > 0
+          ? Math.round((progress.items_with_evidence / progress.total_items) * 100 * 100) / 100
+          : 0;
         
         await query(`
           UPDATE matrix_assignments 
@@ -255,9 +275,9 @@ export class EvidenceService {
         `, [
           progress.total_items,
           progress.items_with_evidence,
-          progress.progress_percentage,
-          progress.progress_percentage,
-          progress.progress_percentage,
+          progressPercentage,
+          progressPercentage,
+          progressPercentage,
           assignmentId
         ]);
       }
@@ -455,7 +475,7 @@ export class EvidenceService {
           ef.status,
           ef.uploaded_at,
           ef.reviewed_at,
-          ef.review_notes,
+          ef.description as review_notes,
           u1.name as uploaded_by_name,
           u1.institution as uploader_institution,
           u2.name as reviewed_by_name,
@@ -561,7 +581,7 @@ export class EvidenceService {
     try {
       await query(
         `UPDATE evidence_files 
-         SET status = ?, reviewed_by = ?, reviewed_at = NOW(), review_notes = ?
+         SET status = ?, reviewed_by = ?, reviewed_at = NOW(), description = ?
          WHERE id = ?`,
         [status, reviewedBy, reviewNotes, evidenceId]
       );

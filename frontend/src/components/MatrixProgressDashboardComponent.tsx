@@ -183,7 +183,7 @@ export function MatrixProgressDashboardComponent() {
           opd_institution: item.opd_institution,
           inspector_name: item.inspector_name,
           total_assignments: 0,
-          total_items: 0,
+          total_items: item.total_items, // Use first assignment's total (all same)
           completed_items: 0,
           items_with_evidence: 0,
           evidence_files_count: 0,
@@ -195,7 +195,8 @@ export function MatrixProgressDashboardComponent() {
       }
 
       acc[key].total_assignments += 1;
-      acc[key].total_items += item.total_items;
+      // DON'T sum total_items - all users work on same items!
+      // acc[key].total_items += item.total_items; // REMOVED - this causes bug!
       acc[key].completed_items += item.completed_items || 0;
       acc[key].items_with_evidence += item.items_with_evidence;
       acc[key].evidence_files_count += item.evidence_files_count;
@@ -216,7 +217,11 @@ export function MatrixProgressDashboardComponent() {
     // Calculate overall progress for each matrix
     Object.values(grouped).forEach(matrix => {
       if (matrix.total_items > 0) {
-        matrix.overall_progress = Math.round((matrix.items_with_evidence / matrix.total_items) * 100);
+        // Calculate progress and cap at 100%
+        // items_with_evidence might be summed from multiple users
+        // but total_items is the actual number of items in the matrix
+        const rawProgress = (matrix.items_with_evidence / matrix.total_items) * 100;
+        matrix.overall_progress = Math.min(Math.round(rawProgress), 100);
       }
     });
 
