@@ -333,8 +333,8 @@ export class EvidenceService {
       let whereConditions: string[] = [];
       let queryParams: any[] = [];
       
-      // Don't filter by uploaded_by for inspektorat - they should see all
-      // Only add filters if provided
+      // For inspektorat, show ALL evidence with uploader info
+      // Use original matrix_evidence_tracking view but with aggregated evidence info
       
       if (filters?.matrix_report_id) {
         whereConditions.push('matrix_report_id = ?');
@@ -353,16 +353,63 @@ export class EvidenceService {
       
       const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
       
-      console.log('🔍 Evidence tracking query:', { whereClause, queryParams });
+      console.log('🔍 Evidence tracking query (Inspektorat - all evidence):', { whereClause, queryParams });
       
-      // Use the new per-user evidence tracking view
+      // Use original view but DISTINCT by matrix_item_id to avoid duplicates
+      // This shows all evidence for each matrix item with uploader info
       const trackingResult = await query(`
-        SELECT * FROM matrix_evidence_tracking_per_user 
+        SELECT DISTINCT
+          mi.id as matrix_item_id,
+          mi.matrix_report_id,
+          mi.item_number,
+          mi.temuan,
+          mi.penyebab,
+          mi.rekomendasi,
+          mi.tindak_lanjut,
+          mi.status as item_status,
+          mi.reviewed_at,
+          mr.title as matrix_title,
+          mr.target_opd,
+          -- Show all evidence for this item with uploader info
+          COALESCE(
+              (SELECT COUNT(*) FROM evidence_files ef WHERE ef.matrix_item_id = mi.id), 
+              0
+          ) as evidence_count,
+          COALESCE(
+              (SELECT GROUP_CONCAT(
+                CONCAT(ef.original_filename, ' (', u.name, ')') 
+                SEPARATOR ', '
+              ) 
+               FROM evidence_files ef 
+               JOIN users u ON ef.uploaded_by = u.id
+               WHERE ef.matrix_item_id = mi.id), 
+              NULL
+          ) as evidence_files,
+          COALESCE(
+              (SELECT GROUP_CONCAT(
+                CONCAT(u.name, ' - ', u.institution) 
+                SEPARATOR ', '
+              ) 
+               FROM evidence_files ef 
+               JOIN users u ON ef.uploaded_by = u.id
+               WHERE ef.matrix_item_id = mi.id), 
+              NULL
+          ) as evidence_uploaders,
+          COALESCE(
+              (SELECT MAX(ef.uploaded_at) FROM evidence_files ef WHERE ef.matrix_item_id = mi.id), 
+              NULL
+          ) as last_evidence_upload,
+          COALESCE(
+              (SELECT ef.status FROM evidence_files ef WHERE ef.matrix_item_id = mi.id ORDER BY ef.uploaded_at DESC LIMIT 1), 
+              NULL
+          ) as latest_evidence_status
+        FROM matrix_items mi
+        JOIN matrix_reports mr ON mi.matrix_report_id = mr.id
         ${whereClause}
-        ORDER BY matrix_title, opd_user_name, item_number
+        ORDER BY mr.created_at DESC, mi.item_number ASC
       `, queryParams);
       
-      console.log('✅ Evidence tracking result:', trackingResult.rows.length, 'rows');
+      console.log('✅ Evidence tracking result (all evidence with uploaders):', trackingResult.rows.length, 'rows');
       
       return {
         success: true,

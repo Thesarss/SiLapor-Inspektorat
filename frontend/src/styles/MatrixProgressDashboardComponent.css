@@ -519,3 +519,66 @@
   color: white;
   text-decoration: none;
 }
+
+/* Evidence tracking styles */
+.evidence-files {
+  margin-top: 4px;
+}
+
+.evidence-filename {
+  display: block;
+  font-size: 0.85em;
+  color: #2c3e50;
+  background: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin: 2px 0;
+  border-left: 3px solid #007bff;
+}
+
+.evidence-uploaders {
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: #e8f4fd;
+  border-radius: 4px;
+  border-left: 3px solid #17a2b8;
+}
+
+.evidence-uploaders small {
+  color: #0c5460;
+  font-weight: 500;
+}
+
+.no-evidence {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.evidence-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.evidence-table th,
+.evidence-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: top;
+}
+
+.evidence-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+}
+
+.evidence-info {
+  min-width: 200px;
+}
+
+.evidence-count {
+  font-weight: 500;
+  color: #28a745;
+}

@@ -39,10 +39,11 @@ interface EvidenceTrackingData {
   reviewed_at?: string;
   matrix_title: string;
   target_opd: string;
-  opd_user_name: string;
-  opd_institution: string;
+  opd_user_name?: string;
+  opd_institution?: string;
   evidence_count: number;
   evidence_files?: string;
+  evidence_uploaders?: string;
   last_evidence_upload?: string;
   latest_evidence_status?: string;
 }
@@ -422,9 +423,8 @@ export function MatrixProgressDashboardComponent() {
                   <th>Matrix</th>
                   <th>Item #</th>
                   <th>Temuan</th>
-                  <th>OPD</th>
                   <th>Status</th>
-                  <th>Evidence</th>
+                  <th>Evidence & Uploader</th>
                   <th>Last Upload</th>
                 </tr>
               </thead>
@@ -447,12 +447,6 @@ export function MatrixProgressDashboardComponent() {
                         {item.temuan.length > 100 && '...'}
                       </div>
                     </td>
-                    <td>
-                      <div className="opd-info">
-                        <strong>{item.opd_user_name}</strong>
-                        <small>{item.opd_institution}</small>
-                      </div>
-                    </td>
                     <td>{getStatusBadge(item.item_status)}</td>
                     <td>
                       <div className="evidence-info">
@@ -462,11 +456,19 @@ export function MatrixProgressDashboardComponent() {
                         {item.evidence_files && (
                           <div className="evidence-files">
                             {item.evidence_files.split(', ').map((filename, idx) => (
-                              <span key={idx} className="evidence-filename">
-                                {filename}
-                              </span>
+                              <div key={idx} className="evidence-filename">
+                                📄 {filename}
+                              </div>
                             ))}
                           </div>
+                        )}
+                        {item.evidence_uploaders && (
+                          <div className="evidence-uploaders">
+                            <small>👤 Uploaded by: {item.evidence_uploaders}</small>
+                          </div>
+                        )}
+                        {item.evidence_count === 0 && (
+                          <small className="no-evidence">Belum ada evidence</small>
                         )}
                       </div>
                     </td>
