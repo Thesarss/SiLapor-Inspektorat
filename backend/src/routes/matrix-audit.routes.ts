@@ -1233,7 +1233,7 @@ matrixAuditRouter.post('/item/:itemId/evidence', authMiddleware, evidenceUpload.
         error: result.error
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     next(error);
   }
 });

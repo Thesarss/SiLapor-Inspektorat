@@ -214,9 +214,9 @@ export class EvidenceService {
         }
       };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload matrix evidence error:', error);
-      return { success: false, error: 'Gagal mengupload evidence' };
+      return { success: false, error: 'Gagal mengupload evidence: ' + error.message };
     }
   }
 
@@ -224,6 +224,7 @@ export class EvidenceService {
    * Update assignment progress based on submitted evidence
    */
   static async updateAssignmentProgress(assignmentId: string): Promise<void> {
+    console.log('📈 updateAssignmentProgress called for:', assignmentId);
     try {
       // Get assignment details first
       const assignmentResult = await query(`
@@ -233,31 +234,37 @@ export class EvidenceService {
       `, [assignmentId]);
       
       if (assignmentResult.rows.length === 0) {
+        console.log('❌ Assignment not found');
         return;
       }
       
       const { assigned_to, matrix_report_id } = assignmentResult.rows[0];
+      console.log('✅ Assignment details:', { assigned_to, matrix_report_id });
       
       // Calculate progress based on evidence uploaded by THIS specific user
+      // Fixed query: Use DISTINCT to avoid counting duplicates from JOIN
       const progressResult = await query(`
         SELECT 
           COUNT(DISTINCT mi.id) as total_items,
-          COUNT(DISTINCT CASE 
-            WHEN EXISTS (
-              SELECT 1 FROM evidence_files ef 
-              WHERE ef.matrix_item_id = mi.id 
-              AND ef.uploaded_by = ?
-            ) THEN mi.id 
-          END) as items_with_evidence
+          COUNT(DISTINCT CASE WHEN ef.id IS NOT NULL THEN mi.id END) as items_with_evidence
         FROM matrix_items mi
+        LEFT JOIN evidence_files ef ON ef.matrix_item_id = mi.id AND ef.uploaded_by = ?
         WHERE mi.matrix_report_id = ?
       `, [assigned_to, matrix_report_id]);
+      
+      console.log('📊 Progress calculation result:', progressResult.rows[0]);
       
       if (progressResult.rows.length > 0) {
         const progress = progressResult.rows[0];
         const progressPercentage = progress.total_items > 0
           ? Math.round((progress.items_with_evidence / progress.total_items) * 100 * 100) / 100
           : 0;
+        
+        console.log('📈 Calculated progress:', {
+          total_items: progress.total_items,
+          items_with_evidence: progress.items_with_evidence,
+          progress_percentage: progressPercentage
+        });
         
         await query(`
           UPDATE matrix_assignments 
@@ -280,10 +287,12 @@ export class EvidenceService {
           progressPercentage,
           assignmentId
         ]);
+        
+        console.log('✅ Assignment progress updated successfully');
       }
       
     } catch (error) {
-      console.error('Update assignment progress error:', error);
+      console.error('❌ Update assignment progress error:', error);
     }
   }
 
@@ -346,10 +355,11 @@ export class EvidenceService {
       
       console.log('🔍 Evidence tracking query:', { whereClause, queryParams });
       
+      // Use the new per-user evidence tracking view
       const trackingResult = await query(`
-        SELECT * FROM matrix_evidence_tracking 
+        SELECT * FROM matrix_evidence_tracking_per_user 
         ${whereClause}
-        ORDER BY matrix_title, item_number
+        ORDER BY matrix_title, opd_user_name, item_number
       `, queryParams);
       
       console.log('✅ Evidence tracking result:', trackingResult.rows.length, 'rows');
