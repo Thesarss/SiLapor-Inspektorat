@@ -257,7 +257,7 @@ export class EvidenceService {
       if (progressResult.rows.length > 0) {
         const progress = progressResult.rows[0];
         const progressPercentage = progress.total_items > 0
-          ? Math.round((progress.items_with_evidence / progress.total_items) * 100 * 100) / 100
+          ? Math.round((progress.items_with_evidence / progress.total_items) * 100)
           : 0;
         
         console.log('📈 Calculated progress:', {
