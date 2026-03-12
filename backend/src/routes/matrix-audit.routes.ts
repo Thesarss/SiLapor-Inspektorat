@@ -74,9 +74,9 @@ matrixAuditRouter.get('/institutions', authMiddleware, async (req: AuthRequest, 
       WHERE role = 'opd' AND institution IS NOT NULL 
       ORDER BY institution
     `);
-    
+
     const institutions = result.rows.map(row => row.institution);
-    
+
     res.json({
       success: true,
       data: institutions,
@@ -102,15 +102,13 @@ matrixAuditRouter.get('/reports', authMiddleware, async (req: AuthRequest, res: 
     let sql = 'SELECT * FROM matrix_reports';
     const params: any[] = [];
 
-    if (user.role === 'inspektorat') {
-      sql += ' WHERE uploaded_by = ?';
-      params.push(user.id);
-    }
+    // Inspektorat melihat SEMUA matrix reports (tidak filter by uploaded_by)
+    // Super admin juga melihat semua
 
     sql += ' ORDER BY created_at DESC';
-    
+
     const result = await query<RowDataPacket[]>(sql, params);
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -148,7 +146,7 @@ matrixAuditRouter.get('/assignments', authMiddleware, async (req: AuthRequest, r
       WHERE ma.assigned_to = ?
       ORDER BY ma.assigned_at DESC
     `, [user.id]);
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -163,7 +161,7 @@ matrixAuditRouter.get('/assignments', authMiddleware, async (req: AuthRequest, r
 matrixAuditRouter.get('/statistics', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -174,14 +172,14 @@ matrixAuditRouter.get('/statistics', authMiddleware, async (req: AuthRequest, re
     let stats = {};
 
     if (user.role === 'inspektorat' || user.role === 'super_admin') {
-      // Statistics for Inspektorat - from matrix reports
+      // Statistics for Inspektorat - SEMUA matrix reports (bukan hanya yang diupload user ini)
       const [totalMatrix, totalItems, completedItems, submittedItems, pendingItems, opdStats] = await Promise.all([
-        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_reports WHERE uploaded_by = ?', [user.id]),
-        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ?', [user.id]),
-        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ? AND mi.status = ?', [user.id, 'approved']),
-        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ? AND mi.status = ?', [user.id, 'submitted']),
-        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items mi JOIN matrix_reports mr ON mi.matrix_report_id = mr.id WHERE mr.uploaded_by = ? AND mi.status = ?', [user.id, 'pending']),
-        query<RowDataPacket[]>('SELECT COUNT(DISTINCT target_opd) as total_opds, COUNT(DISTINCT CASE WHEN completed_items > 0 THEN target_opd END) as active_opds FROM matrix_reports WHERE uploaded_by = ?', [user.id])
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_reports'),
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items'),
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items WHERE status = ?', ['approved']),
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items WHERE status = ?', ['submitted']),
+        query<RowDataPacket[]>('SELECT COUNT(*) as count FROM matrix_items WHERE status = ?', ['pending']),
+        query<RowDataPacket[]>('SELECT COUNT(DISTINCT target_opd) as total_opds, COUNT(DISTINCT CASE WHEN completed_items > 0 THEN target_opd END) as active_opds FROM matrix_reports')
       ]);
 
       stats = {
@@ -227,7 +225,7 @@ matrixAuditRouter.get('/statistics', authMiddleware, async (req: AuthRequest, re
 matrixAuditRouter.get('/opd-performance', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
       return res.status(403).json({
         success: false,
@@ -235,35 +233,31 @@ matrixAuditRouter.get('/opd-performance', authMiddleware, async (req: AuthReques
       });
     }
 
-    // Get performance data for each OPD
+    // Get performance data for each OPD - FIXED: Query by institution, not by user
+    // This prevents counting the same matrix items multiple times for each user in the same institution
     const performanceData = await query<RowDataPacket[]>(`
       SELECT 
-        u.name as opd_name,
-        u.institution,
-        COUNT(DISTINCT ma.id) as total_assignments,
+        mr.target_opd as institution,
+        mr.target_opd as opd_name,
+        COUNT(DISTINCT mr.id) as total_assignments,
         COUNT(mi.id) as total_items,
         SUM(CASE WHEN mi.status = 'approved' THEN 1 ELSE 0 END) as completed_items,
         SUM(CASE WHEN mi.status = 'submitted' THEN 1 ELSE 0 END) as submitted_items,
         SUM(CASE WHEN mi.status = 'pending' THEN 1 ELSE 0 END) as pending_items,
         ROUND(
-          (SUM(CASE WHEN mi.status = 'approved' THEN 1 ELSE 0 END) / COUNT(mi.id)) * 100, 
+          (SUM(CASE WHEN mi.status = 'approved' THEN 1 ELSE 0 END) / NULLIF(COUNT(mi.id), 0)) * 100, 
           2
         ) as completion_rate,
         COALESCE(
-          AVG(DATEDIFF(mi.updated_at, ma.assigned_at)),
+          AVG(TIMESTAMPDIFF(DAY, mr.created_at, mi.updated_at)),
           0
         ) as avg_response_time
-      FROM users u
-      LEFT JOIN matrix_assignments ma ON ma.assigned_to = u.id
-      LEFT JOIN matrix_reports mr ON ma.matrix_report_id = mr.id
+      FROM matrix_reports mr
       LEFT JOIN matrix_items mi ON mi.matrix_report_id = mr.id
-      WHERE u.role = 'opd' 
-        AND u.institution IS NOT NULL
-        AND mr.uploaded_by = ?
-      GROUP BY u.id, u.name, u.institution
-      HAVING total_assignments > 0
-      ORDER BY completion_rate DESC, u.institution
-    `, [user.id]);
+      WHERE mr.target_opd IS NOT NULL
+      GROUP BY mr.target_opd
+      ORDER BY completion_rate DESC, mr.target_opd
+    `);
 
     res.json({
       success: true,
@@ -278,7 +272,7 @@ matrixAuditRouter.get('/opd-performance', authMiddleware, async (req: AuthReques
 matrixAuditRouter.get('/inspektorat-performance', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     if (!user || user.role !== 'super_admin') {
       return res.status(403).json({
         success: false,
@@ -325,7 +319,7 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
   console.log('   User:', req.user?.name, '| Role:', req.user?.role);
   console.log('   Content-Type:', req.headers['content-type']);
   console.log('   Body keys:', Object.keys(req.body));
-  
+
   upload.single('file')(req, res, (err) => {
     console.log('📦 Multer middleware callback');
     if (err) {
@@ -356,7 +350,7 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
 }, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     console.log('🔍 Matrix upload request:', {
       user: user?.name,
       role: user?.role,
@@ -367,7 +361,7 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
       } : 'NO FILE',
       body: req.body
     });
-    
+
     if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
       console.error('❌ Permission denied:', user?.role);
       return res.status(403).json({
@@ -385,7 +379,7 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
     }
 
     const { title, description, targetOPD, useAutoMapping } = req.body;
-    
+
     console.log('📋 Form data:', { title, description, targetOPD, useAutoMapping });
 
     if (!title || !targetOPD) {
@@ -398,7 +392,7 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
 
     // Import MatrixParserService dynamically
     const { MatrixParserService } = await import('../services/matrix-parser.service');
-    
+
     // Validate file
     const validation = MatrixParserService.validateMatrixFile(req.file.path);
     if (!validation.valid) {
@@ -414,20 +408,20 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
 
     // Parse matrix file with auto mapping
     const parseResult = await MatrixParserService.parseMatrixFile(req.file.path, useAutoMapping === 'true');
-    
+
     if (!parseResult.success) {
       // Clean up uploaded file
       if (fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
-      
+
       console.error('❌ Parse failed:', parseResult.errors);
       console.error('   Detected headers:', parseResult.detectedHeaders);
       console.error('   Warnings:', parseResult.warnings);
-      
+
       // Get the most relevant error message
       const mainError = parseResult.errors[0] || 'Gagal memproses file matrix';
-      
+
       return res.status(400).json({
         success: false,
         error: mainError,
@@ -448,8 +442,8 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
         original_filename, file_path, status, total_items, completed_items
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      reportId, title, description, user.id, 
-      targetOPD, req.file.originalname, req.file.path, 
+      reportId, title, description, user.id,
+      targetOPD, req.file.originalname, req.file.path,
       'active', parseResult.totalItems, 0
     ]);
 
@@ -461,7 +455,7 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
           id, matrix_report_id, item_number, temuan, penyebab, rekomendasi, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
       `, [
-        itemId, reportId, item.rowNumber, item.temuan, 
+        itemId, reportId, item.rowNumber, item.temuan,
         item.penyebab, item.rekomendasi, 'pending'
       ]);
     }
@@ -512,10 +506,10 @@ matrixAuditRouter.post('/upload-auto', authMiddleware, (req: AuthRequest, res: R
 matrixAuditRouter.post('/upload', authMiddleware, upload.single('file'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     console.log('🚀 UPLOAD (MANUAL) ENDPOINT HIT');
     console.log('   User:', user?.name, '| Role:', user?.role);
-    
+
     if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
       return res.status(403).json({
         success: false,
@@ -541,7 +535,7 @@ matrixAuditRouter.post('/upload', authMiddleware, upload.single('file'), async (
 
     // Import MatrixParserService
     const { MatrixParserService } = await import('../services/matrix-parser.service');
-    
+
     // Validate file
     const validation = MatrixParserService.validateMatrixFile(req.file.path);
     if (!validation.valid) {
@@ -556,14 +550,14 @@ matrixAuditRouter.post('/upload', authMiddleware, upload.single('file'), async (
 
     // Parse with simple mode (reads columns in order without header detection)
     const parseResult = await MatrixParserService.parseMatrixFileSimple(req.file.path);
-    
+
     if (!parseResult.success) {
       if (fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
-      
+
       console.error('❌ Parse failed:', parseResult.errors);
-      
+
       return res.status(400).json({
         success: false,
         error: parseResult.errors[0] || 'Gagal memproses file matrix',
@@ -583,8 +577,8 @@ matrixAuditRouter.post('/upload', authMiddleware, upload.single('file'), async (
         original_filename, file_path, status, total_items, completed_items
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      reportId, title, description, user.id, 
-      targetOPD, req.file.originalname, req.file.path, 
+      reportId, title, description, user.id,
+      targetOPD, req.file.originalname, req.file.path,
       'active', parseResult.totalItems, 0
     ]);
 
@@ -596,7 +590,7 @@ matrixAuditRouter.post('/upload', authMiddleware, upload.single('file'), async (
           id, matrix_report_id, item_number, temuan, penyebab, rekomendasi, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
       `, [
-        itemId, reportId, item.rowNumber, item.temuan, 
+        itemId, reportId, item.rowNumber, item.temuan,
         item.penyebab, item.rekomendasi, 'pending'
       ]);
     }
@@ -650,7 +644,7 @@ matrixAuditRouter.post('/upload', authMiddleware, upload.single('file'), async (
 matrixAuditRouter.get('/evidence/metadata', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
       return res.status(403).json({
         success: false,
@@ -683,7 +677,7 @@ matrixAuditRouter.get('/evidence/metadata', authMiddleware, async (req: AuthRequ
 matrixAuditRouter.get('/evidence/search', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
       return res.status(403).json({
         success: false,
@@ -839,7 +833,7 @@ matrixAuditRouter.get('/assignment/:assignmentId/items', authMiddleware, async (
   try {
     const user = req.user;
     const { assignmentId } = req.params;
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -916,8 +910,8 @@ matrixAuditRouter.post('/item/:itemId/submit', authMiddleware, evidenceUpload.si
   try {
     const user = req.user;
     const { itemId } = req.params;
-    const { tindakLanjut } = req.body;
-    
+    const { tindakLanjut, description, category, priority } = req.body;
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -932,9 +926,17 @@ matrixAuditRouter.post('/item/:itemId/submit', authMiddleware, evidenceUpload.si
       });
     }
 
-    // Verify item exists and user has access
+    // Evidence is REQUIRED
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bukti/Evidence wajib diupload'
+      });
+    }
+
+    // Verify item exists and user has access, also get assignment ID
     const itemResult = await query<RowDataPacket[]>(`
-      SELECT mi.*, ma.assigned_to
+      SELECT mi.*, ma.assigned_to, ma.id as assignment_id, mr.title as matrix_title
       FROM matrix_items mi
       JOIN matrix_reports mr ON mi.matrix_report_id = mr.id
       JOIN matrix_assignments ma ON ma.matrix_report_id = mr.id
@@ -948,35 +950,79 @@ matrixAuditRouter.post('/item/:itemId/submit', authMiddleware, evidenceUpload.si
       });
     }
 
-    // Update matrix item with tindak lanjut and evidence
-    const updateData: any = {
-      tindak_lanjut: tindakLanjut,
-      status: 'submitted'
-    };
+    const matrixItem = itemResult.rows[0];
+    const assignmentId = matrixItem.assignment_id;
 
-    if (req.file) {
-      updateData.evidence_filename = req.file.originalname;
-      updateData.evidence_file_path = req.file.path;
-      updateData.evidence_file_size = req.file.size;
-    }
-
-    const updateFields = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
-    const updateValues = Object.values(updateData);
-
+    // Update matrix item with tindak lanjut
     await query(`
       UPDATE matrix_items
-      SET ${updateFields}
+      SET tindak_lanjut = ?, status = 'submitted'
       WHERE id = ?
-    `, [...updateValues, itemId]);
+    `, [tindakLanjut, itemId]);
+
+    // If evidence file is uploaded, save to evidence_files table with full tracking
+    // Evidence is REQUIRED, so this should always execute
+    let evidenceData = null;
+    const { EvidenceService } = await import('../services/evidence.service');
+
+    const evidenceResult = await EvidenceService.uploadMatrixEvidence(
+      itemId,
+      assignmentId,
+      req.file,
+      user.id,
+      {
+        description: description || `Bukti tindak lanjut: ${tindakLanjut.substring(0, 100)}`,
+        category: category || 'Dokumen',
+        priority: priority || 'medium'
+      }
+    );
+
+    if (evidenceResult.success) {
+      evidenceData = evidenceResult.data;
+    } else {
+      // If evidence upload fails, return error
+      return res.status(400).json({
+        success: false,
+        error: `Gagal menyimpan evidence: ${evidenceResult.error}`
+      });
+    }
 
     // Update assignment status to in_progress if not already
     await query(`
       UPDATE matrix_assignments ma
       JOIN matrix_reports mr ON ma.matrix_report_id = mr.id
       JOIN matrix_items mi ON mi.matrix_report_id = mr.id
-      SET ma.status = 'in_progress'
+      SET ma.status = 'in_progress', ma.last_activity_at = NOW()
       WHERE mi.id = ? AND ma.assigned_to = ? AND ma.status = 'pending'
     `, [itemId, user.id]);
+
+    // Update progress based on submitted items (not just evidence)
+    const progressResult = await query<RowDataPacket[]>(`
+      SELECT 
+        COUNT(*) as total_items,
+        SUM(CASE WHEN mi.status IN ('submitted', 'approved') THEN 1 ELSE 0 END) as completed_items,
+        COUNT(DISTINCT ef.id) as evidence_count
+      FROM matrix_items mi
+      LEFT JOIN evidence_files ef ON ef.matrix_item_id = mi.id AND ef.uploaded_by = ?
+      WHERE mi.matrix_report_id = ?
+    `, [user.id, matrixItem.matrix_report_id]);
+
+    if (progressResult.rows.length > 0) {
+      const progress = progressResult.rows[0];
+      const progressPercentage = progress.total_items > 0
+        ? Math.round((progress.completed_items / progress.total_items) * 100 * 100) / 100
+        : 0;
+
+      await query(`
+        UPDATE matrix_assignments
+        SET 
+          total_items = ?,
+          items_with_evidence = ?,
+          progress_percentage = ?,
+          last_activity_at = NOW()
+        WHERE id = ?
+      `, [progress.total_items, progress.evidence_count, progressPercentage, assignmentId]);
+    }
 
     // Check if all items are submitted, then mark assignment as completed
     const allItemsResult = await query<RowDataPacket[]>(`
@@ -984,10 +1030,8 @@ matrixAuditRouter.post('/item/:itemId/submit', authMiddleware, evidenceUpload.si
              SUM(CASE WHEN mi.status IN ('submitted', 'approved') THEN 1 ELSE 0 END) as completed
       FROM matrix_items mi
       JOIN matrix_assignments ma ON ma.matrix_report_id = mi.matrix_report_id
-      WHERE ma.assigned_to = ? AND mi.matrix_report_id = (
-        SELECT matrix_report_id FROM matrix_items WHERE id = ?
-      )
-    `, [user.id, itemId]);
+      WHERE ma.assigned_to = ? AND mi.matrix_report_id = ?
+    `, [user.id, matrixItem.matrix_report_id]);
 
     const { total, completed } = allItemsResult.rows[0];
     if (total === completed) {
@@ -1001,10 +1045,12 @@ matrixAuditRouter.post('/item/:itemId/submit', authMiddleware, evidenceUpload.si
 
     res.json({
       success: true,
-      message: 'Tindak lanjut berhasil disubmit',
+      message: 'Tindak lanjut dan bukti berhasil disubmit',
       data: {
         itemId,
-        hasEvidence: !!req.file
+        hasEvidence: true,
+        evidenceId: evidenceData?.id,
+        status: 'submitted'
       }
     });
   } catch (error) {
@@ -1017,7 +1063,7 @@ matrixAuditRouter.get('/item/:itemId/evidence', authMiddleware, async (req: Auth
   try {
     const user = req.user;
     const { itemId } = req.params;
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -1069,16 +1115,16 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
     const user = req.user;
     const { itemId } = req.params;
     const { status, reviewNotes } = req.body;
-    
-    console.log('🔍 Matrix Review Request:', { 
-      itemId, 
-      status, 
-      reviewNotes, 
-      userId: user?.id, 
+
+    console.log('🔍 Matrix Review Request:', {
+      itemId,
+      status,
+      reviewNotes,
+      userId: user?.id,
       userRole: user?.role,
-      userName: user?.name 
+      userName: user?.name
     });
-    
+
     if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
       console.error('❌ Permission denied:', user?.role);
       return res.status(403).json({
@@ -1099,7 +1145,7 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
     const userCheck = await query<RowDataPacket[]>(`
       SELECT id, username, role FROM users WHERE id = ?
     `, [user.id]);
-    
+
     if (!userCheck.rows || userCheck.rows.length === 0) {
       console.error('❌ User not found in database:', user.id);
       return res.status(401).json({
@@ -1107,14 +1153,14 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
         error: 'User tidak valid. Silakan login ulang.'
       });
     }
-    
+
     console.log('✅ User verified:', userCheck.rows[0]);
 
     // Check if item exists
     const checkResult = await query<RowDataPacket[]>(`
       SELECT id, status, matrix_report_id FROM matrix_items WHERE id = ?
     `, [itemId]);
-    
+
     if (!checkResult.rows || checkResult.rows.length === 0) {
       console.error('❌ Matrix item not found:', itemId);
       return res.status(404).json({
@@ -1122,7 +1168,7 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
         error: 'Matrix item tidak ditemukan'
       });
     }
-    
+
     console.log('✅ Matrix item found:', checkResult.rows[0]);
 
     // Update item with review
@@ -1131,8 +1177,8 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
       SET status = ?, reviewed_by = ?, review_notes = ?, reviewed_at = NOW()
       WHERE id = ?
     `, [status, user.id, reviewNotes || null, itemId]);
-    
-    console.log('✅ Update successful:', { 
+
+    console.log('✅ Update successful:', {
       rowCount: updateResult.rowCount,
       status,
       reviewedBy: user.id
@@ -1149,7 +1195,7 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
       )
       WHERE mr.id = ?
     `, [matrixReportId]);
-    
+
     console.log('✅ Matrix report progress updated');
 
     res.json({
@@ -1167,7 +1213,7 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
       code: error.code,
       sqlMessage: error.sqlMessage
     });
-    
+
     // Handle specific database errors
     if (error.code === 'ER_NO_REFERENCED_ROW_2') {
       return res.status(400).json({
@@ -1175,17 +1221,19 @@ matrixAuditRouter.post('/item/:itemId/review', authMiddleware, async (req: AuthR
         error: 'User tidak valid. Silakan login ulang.'
       });
     }
-    
+
     next(error);
   }
 });
+// DEPRECATED: Use /item/:itemId/submit instead for better UX
+// This endpoint is kept for backward compatibility but not recommended
 // POST /api/matrix/item/:itemId/evidence - Upload evidence for matrix item (OPD)
 matrixAuditRouter.post('/item/:itemId/evidence', authMiddleware, evidenceUpload.single('evidence'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     const { itemId } = req.params;
     const { assignmentId, description, category, priority } = req.body;
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -1200,18 +1248,32 @@ matrixAuditRouter.post('/item/:itemId/evidence', authMiddleware, evidenceUpload.
       });
     }
 
-    if (!assignmentId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Assignment ID wajib diisi'
-      });
+    // Auto-detect assignmentId if not provided
+    let finalAssignmentId = assignmentId;
+    if (!finalAssignmentId) {
+      const assignmentResult = await query<RowDataPacket[]>(`
+        SELECT ma.id
+        FROM matrix_assignments ma
+        JOIN matrix_items mi ON ma.matrix_report_id = mi.matrix_report_id
+        WHERE mi.id = ? AND ma.assigned_to = ?
+        LIMIT 1
+      `, [itemId, user.id]);
+
+      if (assignmentResult.rows.length > 0) {
+        finalAssignmentId = assignmentResult.rows[0].id;
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: 'Assignment tidak ditemukan. Gunakan endpoint /item/:itemId/submit untuk UX yang lebih baik.'
+        });
+      }
     }
 
     const { EvidenceService } = await import('../services/evidence.service');
-    
+
     const result = await EvidenceService.uploadMatrixEvidence(
       itemId,
-      assignmentId,
+      finalAssignmentId,
       req.file,
       user.id,
       {
@@ -1224,7 +1286,7 @@ matrixAuditRouter.post('/item/:itemId/evidence', authMiddleware, evidenceUpload.
     if (result.success) {
       res.json({
         success: true,
-        message: 'Evidence berhasil diupload',
+        message: 'Evidence berhasil diupload. Untuk UX lebih baik, gunakan endpoint /item/:itemId/submit',
         data: result.data
       });
     } else {
@@ -1242,7 +1304,7 @@ matrixAuditRouter.post('/item/:itemId/evidence', authMiddleware, evidenceUpload.
 matrixAuditRouter.get('/progress', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
       return res.status(403).json({
         success: false,
@@ -1251,7 +1313,7 @@ matrixAuditRouter.get('/progress', authMiddleware, async (req: AuthRequest, res:
     }
 
     const { EvidenceService } = await import('../services/evidence.service');
-    
+
     const result = await EvidenceService.getMatrixProgress(user.id);
 
     if (result.success) {
@@ -1274,7 +1336,7 @@ matrixAuditRouter.get('/progress', authMiddleware, async (req: AuthRequest, res:
 matrixAuditRouter.get('/evidence-tracking', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
-    
+
     if (!user || (user.role !== 'inspektorat' && user.role !== 'super_admin')) {
       return res.status(403).json({
         success: false,
@@ -1289,7 +1351,7 @@ matrixAuditRouter.get('/evidence-tracking', authMiddleware, async (req: AuthRequ
     };
 
     const { EvidenceService } = await import('../services/evidence.service');
-    
+
     const result = await EvidenceService.getMatrixEvidenceTracking(user.id, filters);
 
     if (result.success) {
@@ -1313,7 +1375,7 @@ matrixAuditRouter.get('/assignment/:assignmentId/progress', authMiddleware, asyn
   try {
     const user = req.user;
     const { assignmentId } = req.params;
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,

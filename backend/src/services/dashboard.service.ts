@@ -65,33 +65,34 @@ export const DashboardService = {
 
   async getInspektoratAnalytics(userId: string) {
     try {
-      // Get all reports assigned to this inspektorat user for review
-      const assignedReports = await ReportModel.findAll({ assignedUserId: userId });
-      
-      // Calculate statistics
-      const totalReports = assignedReports.length;
-      const pendingReports = assignedReports.filter(r => r.status === 'pending').length;
-      const approvedReports = assignedReports.filter(r => r.status === 'approved').length;
-      const rejectedReports = assignedReports.filter(r => r.status === 'rejected').length;
-      const needsRevisionReports = assignedReports.filter(r => r.status === 'needs_revision').length;
-      
+      // FIXED: Inspektorat melihat SEMUA laporan dari SEMUA OPD, bukan hanya yang di-assign
+      // Get ALL reports in the system (inspektorat monitors all OPD performance)
+      const allReports = await ReportModel.findAll({});
+
+      // Calculate statistics from ALL reports
+      const totalReports = allReports.length;
+      const pendingReports = allReports.filter(r => r.status === 'pending').length;
+      const approvedReports = allReports.filter(r => r.status === 'approved').length;
+      const rejectedReports = allReports.filter(r => r.status === 'rejected').length;
+      const needsRevisionReports = allReports.filter(r => r.status === 'needs_revision').length;
+
       // Get unique OPDs that have submitted reports
-      const opdInstitutions = new Set(assignedReports.map(r => r.creator_institution).filter(Boolean));
+      const opdInstitutions = new Set(allReports.map(r => r.creator_institution).filter(Boolean));
       const totalOPDs = 8; // Total OPDs in system (hardcoded for now)
       const activeOPDs = opdInstitutions.size;
-      
+
       // Calculate monthly reports (current month)
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
-      const monthlyReports = assignedReports.filter(r => {
+      const monthlyReports = allReports.filter(r => {
         const reportDate = new Date(r.created_at);
         return reportDate.getMonth() === currentMonth && reportDate.getFullYear() === currentYear;
       }).length;
-      
+
       // Calculate average response time (mock calculation)
-      const completedReports = assignedReports.filter(r => r.status === 'approved' || r.status === 'rejected');
+      const completedReports = allReports.filter(r => r.status === 'approved' || r.status === 'rejected');
       const avgResponseTime = completedReports.length > 0 ? 2.5 : 0; // Mock: 2.5 days average
-      
+
       return {
         totalReports,
         pendingReports,

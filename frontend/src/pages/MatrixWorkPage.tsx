@@ -2,7 +2,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
-import { MatrixEvidenceUploadComponent } from '../components/MatrixEvidenceUploadComponent';
 import { MatrixItemsTreeView } from '../components/MatrixItemsTreeView';
 import '../styles/MatrixWorkPage.css';
 
@@ -52,7 +51,7 @@ export function MatrixWorkPage() {
       setError(null);
 
       const response = await apiClient.get(`/matrix/assignment/${assignmentId}/items`);
-      
+
       if (response.data.success) {
         setAssignment(response.data.data.assignment);
         setItems(response.data.data.items);
@@ -79,22 +78,25 @@ export function MatrixWorkPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedItem) return;
-    
+
     if (!tindakLanjut.trim()) {
       alert('Tindak lanjut wajib diisi');
       return;
     }
 
+    if (!evidenceFile) {
+      alert('Bukti/Evidence wajib diupload');
+      return;
+    }
+
     try {
       setSubmitting(true);
-      
+
       const formData = new FormData();
       formData.append('tindakLanjut', tindakLanjut);
-      if (evidenceFile) {
-        formData.append('evidence', evidenceFile);
-      }
+      formData.append('evidence', evidenceFile);
 
       const response = await apiClient.post(
         `/matrix/item/${selectedItem.id}/submit`,
@@ -107,7 +109,7 @@ export function MatrixWorkPage() {
       );
 
       if (response.data.success) {
-        alert('✅ Tindak lanjut berhasil disubmit');
+        alert('✅ Tindak lanjut dan bukti berhasil disubmit');
         setSelectedItem(null);
         setTindakLanjut('');
         setEvidenceFile(null);
@@ -126,7 +128,7 @@ export function MatrixWorkPage() {
       const response = await apiClient.get(`/matrix/item/${itemId}/evidence`, {
         responseType: 'blob'
       });
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -175,8 +177,8 @@ export function MatrixWorkPage() {
           <div className="progress-info">
             <span className="progress-text">Progress: {getProgressPercentage()}%</span>
             <div className="progress-bar">
-              <div 
-                className="progress-fill" 
+              <div
+                className="progress-fill"
                 style={{ width: `${getProgressPercentage()}%` }}
               ></div>
             </div>
@@ -221,57 +223,49 @@ export function MatrixWorkPage() {
                 </div>
 
                 {selectedItem.status === 'pending' ? (
-                  <div className="work-sections">
-                    <form onSubmit={handleSubmit} className="tindak-lanjut-form">
-                      <h3>📝 Isi Tindak Lanjut</h3>
-                      <p className="form-instruction">
-                        Jelaskan tindak lanjut yang telah atau akan dilakukan untuk mengatasi temuan audit ini.
-                      </p>
-                      
-                      <div className="form-group">
-                        <label>Tindak Lanjut *</label>
-                        <textarea
-                          value={tindakLanjut}
-                          onChange={(e) => setTindakLanjut(e.target.value)}
-                          placeholder="Contoh: Telah dilakukan perbaikan sistem dengan cara... Bukti terlampir berupa screenshot sistem yang telah diperbaiki."
-                          rows={6}
-                          required
-                        />
-                      </div>
+                  <form onSubmit={handleSubmit} className="tindak-lanjut-form">
+                    <h3>📝 Isi Tindak Lanjut</h3>
+                    <p className="form-instruction">
+                      Jelaskan tindak lanjut yang telah atau akan dilakukan untuk mengatasi temuan audit ini.
+                    </p>
 
-                      <div className="form-group">
-                        <label>Bukti/Evidence (Opsional)</label>
-                        <input
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                          onChange={handleFileChange}
-                        />
-                        {evidenceFile && (
-                          <p className="file-info">📄 {evidenceFile.name}</p>
-                        )}
-                        <p className="help-text">
-                          Upload bukti pendukung seperti foto, dokumen, atau screenshot. 
-                          Format yang didukung: PDF, gambar (JPG, PNG), atau dokumen Word. Maksimal 10MB.
-                        </p>
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="btn-submit"
-                        disabled={submitting}
-                      >
-                        {submitting ? '⏳ Mengirim...' : '✅ Submit Tindak Lanjut'}
-                      </button>
-                    </form>
-
-                    <div className="evidence-upload-section">
-                      <MatrixEvidenceUploadComponent
-                        matrixItem={selectedItem}
-                        assignmentId={assignmentId!}
-                        onEvidenceUploaded={loadAssignmentItems}
+                    <div className="form-group">
+                      <label>Tindak Lanjut *</label>
+                      <textarea
+                        value={tindakLanjut}
+                        onChange={(e) => setTindakLanjut(e.target.value)}
+                        placeholder="Contoh: Telah dilakukan perbaikan sistem dengan cara... Bukti terlampir berupa screenshot sistem yang telah diperbaiki."
+                        rows={6}
+                        required
                       />
                     </div>
-                  </div>
+
+                    <div className="form-group">
+                      <label>Bukti/Evidence *</label>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        onChange={handleFileChange}
+                        required
+                      />
+                      {evidenceFile && (
+                        <p className="file-info">📄 {evidenceFile.name}</p>
+                      )}
+                      <p className="help-text">
+                        Upload bukti pendukung seperti foto, dokumen, atau screenshot.
+                        Format yang didukung: PDF, gambar (JPG, PNG), atau dokumen Word. Maksimal 10MB.
+                        File akan otomatis dikirim untuk review Inspektorat.
+                      </p>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="btn-submit"
+                      disabled={submitting}
+                    >
+                      {submitting ? '⏳ Mengirim...' : '✅ Submit Tindak Lanjut'}
+                    </button>
+                  </form>
                 ) : (
                   <div className="submitted-info">
                     <div className="detail-section">
@@ -298,11 +292,11 @@ export function MatrixWorkPage() {
                         <div className="revision-note">
                           <p><strong>Perlu Revisi:</strong></p>
                           <p>Silakan perbaiki tindak lanjut sesuai catatan di atas dan submit ulang.</p>
-                          <button 
+                          <button
                             className="btn-revise"
                             onClick={() => {
                               // Reset to pending state for revision
-                              setSelectedItem({...selectedItem, status: 'pending'});
+                              setSelectedItem({ ...selectedItem, status: 'pending' });
                             }}
                           >
                             🔄 Revisi Tindak Lanjut
@@ -352,6 +346,6 @@ export function MatrixWorkPage() {
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 }

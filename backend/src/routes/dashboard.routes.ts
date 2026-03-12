@@ -13,7 +13,7 @@ dashboardRouter.use(authMiddleware);
 dashboardRouter.get('/admin', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { year, institution, status, search } = req.query;
-    
+
     const filters = {
       ...(year && { dateFrom: `${year}-01-01`, dateTo: `${year}-12-31` }),
       ...(institution && { institution: institution as string }),
@@ -36,7 +36,7 @@ dashboardRouter.get('/admin', requireAdmin, async (req: Request, res: Response, 
 dashboardRouter.get('/stats', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = (req as AuthRequest).user!;
-    
+
     // Basic stats for testing
     const stats = {
       totalReports: 0,
@@ -59,7 +59,7 @@ dashboardRouter.get('/user', async (req: Request, res: Response, next: NextFunct
   try {
     const user = (req as AuthRequest).user!;
     const { year, status, search } = req.query;
-    
+
     const filters = {
       ...(year && { dateFrom: `${year}-01-01`, dateTo: `${year}-12-31` }),
       ...(status && { status: status as any }),
@@ -124,7 +124,7 @@ dashboardRouter.get('/top-opds', requireAdmin, async (req: Request, res: Respons
 dashboardRouter.get('/inspektorat-analytics', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = (req as AuthRequest).user!;
-    
+
     // Only inspektorat and super_admin can access this
     if (user.role !== 'inspektorat' && user.role !== 'super_admin') {
       return res.status(403).json({
@@ -138,6 +138,69 @@ dashboardRouter.get('/inspektorat-analytics', async (req: Request, res: Response
     res.json({
       success: true,
       data: analytics,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/dashboard/super-admin - Get comprehensive super admin dashboard
+dashboardRouter.get('/super-admin', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { SuperAdminDashboardService } = await import('../services/super-admin-dashboard.service');
+    const dashboard = await SuperAdminDashboardService.getDashboard();
+
+    res.json({
+      success: true,
+      data: dashboard,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/dashboard/super-admin/monthly-trend - Get monthly trend for super admin
+dashboardRouter.get('/super-admin/monthly-trend', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const months = parseInt(req.query.months as string) || 6;
+    const { SuperAdminDashboardService } = await import('../services/super-admin-dashboard.service');
+    const trend = await SuperAdminDashboardService.getMonthlyTrend(months);
+
+    res.json({
+      success: true,
+      data: trend,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/dashboard/super-admin/top-opds - Get top performing OPDs for super admin
+dashboardRouter.get('/super-admin/top-opds', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 5;
+    const { SuperAdminDashboardService } = await import('../services/super-admin-dashboard.service');
+    const topOPDs = await SuperAdminDashboardService.getTopPerformingOPDs(limit);
+
+    res.json({
+      success: true,
+      data: topOPDs,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/dashboard/super-admin/recent-activities - Get recent activities
+dashboardRouter.get('/super-admin/recent-activities', requireAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 10;
+    const { SuperAdminDashboardService } = await import('../services/super-admin-dashboard.service');
+    const activities = await SuperAdminDashboardService.getRecentActivities(limit);
+
+    res.json({
+      success: true,
+      data: activities,
     });
   } catch (error) {
     next(error);
