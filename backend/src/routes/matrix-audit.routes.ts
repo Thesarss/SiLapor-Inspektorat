@@ -249,7 +249,7 @@ matrixAuditRouter.get('/opd-performance', authMiddleware, async (req: AuthReques
           2
         ) as completion_rate,
         COALESCE(
-          AVG(TIMESTAMPDIFF(DAY, mr.created_at, mi.updated_at)),
+          ROUND(AVG(TIMESTAMPDIFF(DAY, mr.created_at, mi.updated_at)), 1),
           0
         ) as avg_response_time
       FROM matrix_reports mr
@@ -261,7 +261,11 @@ matrixAuditRouter.get('/opd-performance', authMiddleware, async (req: AuthReques
 
     res.json({
       success: true,
-      data: performanceData.rows
+      data: performanceData.rows.map(row => ({
+        ...row,
+        completion_rate: Number(row.completion_rate) || 0,
+        avg_response_time: Number(row.avg_response_time) || 0
+      }))
     });
   } catch (error) {
     next(error);
@@ -288,11 +292,11 @@ matrixAuditRouter.get('/inspektorat-performance', authMiddleware, async (req: Au
         COUNT(mi.id) as total_items_uploaded,
         SUM(CASE WHEN mi.reviewed_by = u.id THEN 1 ELSE 0 END) as total_reviews_done,
         COALESCE(
-          AVG(CASE 
+          ROUND(AVG(CASE 
             WHEN mi.reviewed_by = u.id AND mi.reviewed_at IS NOT NULL 
             THEN DATEDIFF(mi.reviewed_at, mi.updated_at)
             ELSE NULL
-          END),
+          END), 1),
           0
         ) as avg_review_time
       FROM users u
@@ -306,7 +310,10 @@ matrixAuditRouter.get('/inspektorat-performance', authMiddleware, async (req: Au
 
     res.json({
       success: true,
-      data: performanceData.rows
+      data: performanceData.rows.map(row => ({
+        ...row,
+        avg_review_time: Number(row.avg_review_time) || 0
+      }))
     });
   } catch (error) {
     next(error);

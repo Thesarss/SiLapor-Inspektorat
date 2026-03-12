@@ -287,8 +287,8 @@ export const AdminMatrixAnalyticsComponent = React.memo(function AdminMatrixAnal
                         </div>
                       </td>
                       <td className="text-center">
-                        {opd.avg_response_time > 0 
-                          ? `${opd.avg_response_time.toFixed(1)} hari` 
+                        {Number(opd.avg_response_time) > 0 
+                          ? `${Number(opd.avg_response_time).toFixed(1)} hari` 
                           : '-'}
                       </td>
                     </tr>
@@ -331,8 +331,8 @@ export const AdminMatrixAnalyticsComponent = React.memo(function AdminMatrixAnal
                       <span className="status-badge completed">{insp.total_reviews_done}</span>
                     </td>
                     <td className="text-center">
-                      {insp.avg_review_time > 0 
-                        ? `${insp.avg_review_time.toFixed(1)} hari` 
+                      {Number(insp.avg_review_time) > 0 
+                        ? `${Number(insp.avg_review_time).toFixed(1)} hari` 
                         : '-'}
                     </td>
                   </tr>
