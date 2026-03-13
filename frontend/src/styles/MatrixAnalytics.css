@@ -286,11 +286,16 @@
 
 .performance-table th {
   padding: 12px 16px;
-  text-align: left;
+  text-align: center;
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.performance-table th:first-child {
+  text-align: left;
 }
 
 .performance-table tbody tr {
@@ -306,6 +311,12 @@
   padding: 12px 16px;
   font-size: 0.9rem;
   color: #2c3e50;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.performance-table td:first-child {
+  text-align: left;
 }
 
 .opd-name {
@@ -390,11 +401,11 @@
   .analytics-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .performance-table-container {
     overflow-x: scroll;
   }
-  
+
   .performance-table {
     min-width: 800px;
   }
