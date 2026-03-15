@@ -119,6 +119,63 @@ matrixAuditRouter.get('/reports', authMiddleware, async (req: AuthRequest, res: 
   }
 });
 
+// GET /api/matrix/reports/:id - Get matrix report detail with items
+matrixAuditRouter.get('/reports/:id', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user;
+    const { id } = req.params;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'User tidak terautentikasi'
+      });
+    }
+
+    // Get matrix report
+    const reportResult = await query<RowDataPacket[]>(`
+      SELECT mr.*, u.name as uploaded_by_name
+      FROM matrix_reports mr
+      LEFT JOIN users u ON mr.uploaded_by = u.id
+      WHERE mr.id = ?
+    `, [id]);
+
+    if (reportResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Matrix report tidak ditemukan'
+      });
+    }
+
+    const report = reportResult.rows[0];
+
+    // Get all items for this matrix
+    const itemsResult = await query<RowDataPacket[]>(`
+      SELECT 
+        mi.*,
+        ef.original_filename as evidence_filename,
+        ef.file_path as evidence_file_path,
+        ef.uploaded_at as evidence_uploaded_at,
+        reviewer.name as reviewed_by_name
+      FROM matrix_items mi
+      LEFT JOIN evidence_files ef ON ef.matrix_item_id = mi.id
+      LEFT JOIN users reviewer ON mi.reviewed_by = reviewer.id
+      WHERE mi.matrix_report_id = ?
+      ORDER BY mi.item_number ASC
+    `, [id]);
+
+    res.json({
+      success: true,
+      data: {
+        ...report,
+        items: itemsResult.rows
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/matrix/assignments - Get matrix assignments (for OPD)
 matrixAuditRouter.get('/assignments', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

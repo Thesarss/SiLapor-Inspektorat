@@ -48,6 +48,22 @@ interface EvidenceTrackingData {
   latest_evidence_status?: string;
 }
 
+interface MatrixItem {
+  id: string;
+  item_number: number;
+  temuan: string;
+  penyebab?: string;
+  rekomendasi: string;
+  tindak_lanjut?: string;
+  status: string;
+  evidence_filename?: string;
+  evidence_file_path?: string;
+  submitted_at?: string;
+  reviewed_at?: string;
+  reviewed_by?: string;
+  review_notes?: string;
+}
+
 interface AggregatedProgress {
   matrix_report_id: string;
   matrix_title: string;
@@ -70,8 +86,11 @@ export function MatrixProgressDashboardComponent() {
   const { id } = useParams<{ id: string }>(); // Get matrix report ID from URL
   const [progressData, setProgressData] = useState<ProgressData[]>([]);
   const [evidenceTracking, setEvidenceTracking] = useState<EvidenceTrackingData[]>([]);
+  const [matrixItems, setMatrixItems] = useState<MatrixItem[]>([]); // New state for matrix items
+  const [loadingItems, setLoadingItems] = useState(false);
+  const [selectedMatrixId, setSelectedMatrixId] = useState<string | null>(id || null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'progress' | 'evidence'>('progress');
+  const [activeTab, setActiveTab] = useState<'progress' | 'evidence' | 'items'>('progress');
   const [filters, setFilters] = useState({
     target_opd: '',
     status: '',
@@ -137,6 +156,32 @@ export function MatrixProgressDashboardComponent() {
       notify.error('Gagal memuat data tracking evidence');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMatrixItems = async (matrixReportId: string) => {
+    try {
+      setLoadingItems(true);
+      console.log('🔄 Loading matrix items for:', matrixReportId);
+
+      // Get matrix report details with items
+      const response = await apiClient.get(`/matrix/reports/${matrixReportId}`);
+
+      if (response.data.success) {
+        console.log('✅ Matrix items loaded:', response.data.data);
+        // Assuming the API returns items in the response
+        const items = response.data.data.items || [];
+        setMatrixItems(items);
+        setSelectedMatrixId(matrixReportId);
+        setActiveTab('items'); // Switch to items tab
+      } else {
+        notify.error('Gagal memuat detail items matrix');
+      }
+    } catch (error: any) {
+      console.error('❌ Failed to load matrix items:', error);
+      notify.error('Gagal memuat detail items: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setLoadingItems(false);
     }
   };
 
@@ -263,6 +308,13 @@ export function MatrixProgressDashboardComponent() {
           onClick={() => setActiveTab('progress')}
         >
           📈 Progress Overview
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'items' ? 'active' : ''}`}
+          onClick={() => setActiveTab('items')}
+          disabled={!selectedMatrixId}
+        >
+          📋 Detail Items {selectedMatrixId && `(${matrixItems.length})`}
         </button>
         <button
           className={`tab-button ${activeTab === 'evidence' ? 'active' : ''}`}
@@ -426,16 +478,117 @@ export function MatrixProgressDashboardComponent() {
                   </details>
 
                   <div className="progress-actions">
-                    <Link
-                      to={`/matrix/detail/${matrix.matrix_report_id}`}
+                    <button
+                      onClick={() => loadMatrixItems(matrix.matrix_report_id)}
                       className="btn-review"
                     >
                       📊 Lihat Semua Items
-                    </Link>
+                    </button>
                   </div>
                 </div>
               ))}
           </div>
+        </div>
+      )}
+
+      {activeTab === 'items' && (
+        <div className="items-tab">
+          {loadingItems ? (
+            <div className="loading">Memuat detail items...</div>
+          ) : matrixItems.length === 0 ? (
+            <div className="empty-state">
+              <p>Pilih matrix dari tab Progress untuk melihat detail items</p>
+            </div>
+          ) : (
+            <>
+              <div className="items-header">
+                <h3>📋 Detail Items Matrix</h3>
+                <p>Total: {matrixItems.length} items</p>
+              </div>
+
+              <div className="items-table-container">
+                <table className="items-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Temuan</th>
+                      <th>Penyebab</th>
+                      <th>Rekomendasi</th>
+                      <th>Tindak Lanjut</th>
+                      <th>Status</th>
+                      <th>Evidence</th>
+                      <th>Tanggal Submit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matrixItems.map((item) => (
+                      <tr key={item.id} className={`item-row status-${item.status}`}>
+                        <td className="text-center">{item.item_number}</td>
+                        <td className="item-content">
+                          <div className="content-text">{item.temuan}</div>
+                        </td>
+                        <td className="item-content">
+                          <div className="content-text">{item.penyebab || '-'}</div>
+                        </td>
+                        <td className="item-content">
+                          <div className="content-text">{item.rekomendasi}</div>
+                        </td>
+                        <td className="item-content">
+                          {item.tindak_lanjut ? (
+                            <div className="content-text tindak-lanjut">{item.tindak_lanjut}</div>
+                          ) : (
+                            <span className="text-muted">Belum ada tindak lanjut</span>
+                          )}
+                        </td>
+                        <td className="text-center">
+                          {getStatusBadge(item.status)}
+                        </td>
+                        <td className="text-center">
+                          {item.evidence_filename ? (
+                            <span className="evidence-indicator">
+                              📎 {item.evidence_filename}
+                            </span>
+                          ) : (
+                            <span className="text-muted">-</span>
+                          )}
+                        </td>
+                        <td className="text-center">
+                          {item.submitted_at ? formatDate(item.submitted_at) : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="items-summary">
+                <div className="summary-card">
+                  <h4>✅ Selesai</h4>
+                  <div className="summary-number">
+                    {matrixItems.filter(i => i.status === 'approved' || i.status === 'completed').length}
+                  </div>
+                </div>
+                <div className="summary-card">
+                  <h4>📤 Submitted</h4>
+                  <div className="summary-number">
+                    {matrixItems.filter(i => i.status === 'submitted').length}
+                  </div>
+                </div>
+                <div className="summary-card">
+                  <h4>⏳ Pending</h4>
+                  <div className="summary-number">
+                    {matrixItems.filter(i => i.status === 'pending').length}
+                  </div>
+                </div>
+                <div className="summary-card">
+                  <h4>📎 Dengan Evidence</h4>
+                  <div className="summary-number">
+                    {matrixItems.filter(i => i.evidence_filename).length}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
