@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import apiClient from '../api/client';
 import { notify } from '../utils/notifications';
 
@@ -67,6 +67,7 @@ interface AggregatedProgress {
 }
 
 export function MatrixProgressDashboardComponent() {
+  const { id } = useParams<{ id: string }>(); // Get matrix report ID from URL
   const [progressData, setProgressData] = useState<ProgressData[]>([]);
   const [evidenceTracking, setEvidenceTracking] = useState<EvidenceTrackingData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,13 +75,17 @@ export function MatrixProgressDashboardComponent() {
   const [filters, setFilters] = useState({
     target_opd: '',
     status: '',
-    matrix_report_id: ''
+    matrix_report_id: id || '' // Initialize with ID from URL if available
   });
 
   useEffect(() => {
+    // Update filter when ID from URL changes
+    if (id) {
+      setFilters(prev => ({ ...prev, matrix_report_id: id }));
+    }
     loadProgressData();
     loadEvidenceTracking();
-  }, []);
+  }, [id]); // Re-run when ID changes
 
   const loadProgressData = async () => {
     try {
@@ -240,6 +245,16 @@ export function MatrixProgressDashboardComponent() {
       <div className="dashboard-header">
         <h2>📊 Matrix Progress Dashboard</h2>
         <p>Monitor progress pekerjaan OPD pada matrix yang telah ditugaskan</p>
+        {id && (
+          <div className="detail-view-indicator">
+            <span className="badge badge-info">
+              🔍 Menampilkan detail matrix tertentu
+            </span>
+            <Link to="/matrix/progress" className="btn-link">
+              ← Kembali ke semua matrix
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="dashboard-tabs">
@@ -306,7 +321,17 @@ export function MatrixProgressDashboardComponent() {
 
           <div className="progress-list">
             {getAggregatedProgress()
-              .filter(matrix => !filters.target_opd || matrix.target_opd === filters.target_opd)
+              .filter(matrix => {
+                // Filter by target OPD if selected
+                if (filters.target_opd && matrix.target_opd !== filters.target_opd) {
+                  return false;
+                }
+                // Filter by matrix report ID if provided (from URL or filter)
+                if (filters.matrix_report_id && matrix.matrix_report_id !== filters.matrix_report_id) {
+                  return false;
+                }
+                return true;
+              })
               .map((matrix) => (
                 <div key={matrix.matrix_report_id} className="progress-card">
                   <div className="progress-card-header">
