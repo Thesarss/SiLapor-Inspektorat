@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import apiClient from '../api/client';
 import { notify } from '../utils/notifications';
+import '../styles/MatrixItemsView.css';
 
 interface ProgressData {
   assignment_id: string;
@@ -502,90 +503,127 @@ export function MatrixProgressDashboardComponent() {
           ) : (
             <>
               <div className="items-header">
-                <h3>📋 Detail Items Matrix</h3>
-                <p>Total: {matrixItems.length} items</p>
+                <div className="header-content">
+                  <h3>📋 Detail Items Matrix</h3>
+                  <p className="subtitle">Menampilkan {matrixItems.length} items dengan detail progress</p>
+                </div>
+                <div className="header-actions">
+                  <button
+                    className="btn-back"
+                    onClick={() => setActiveTab('progress')}
+                  >
+                    ← Kembali ke Progress
+                  </button>
+                </div>
               </div>
 
-              <div className="items-table-container">
-                <table className="items-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Temuan</th>
-                      <th>Penyebab</th>
-                      <th>Rekomendasi</th>
-                      <th>Tindak Lanjut</th>
-                      <th>Status</th>
-                      <th>Evidence</th>
-                      <th>Tanggal Submit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matrixItems.map((item) => (
-                      <tr key={item.id} className={`item-row status-${item.status}`}>
-                        <td className="text-center">{item.item_number}</td>
-                        <td className="item-content">
-                          <div className="content-text">{item.temuan}</div>
-                        </td>
-                        <td className="item-content">
-                          <div className="content-text">{item.penyebab || '-'}</div>
-                        </td>
-                        <td className="item-content">
-                          <div className="content-text">{item.rekomendasi}</div>
-                        </td>
-                        <td className="item-content">
-                          {item.tindak_lanjut ? (
-                            <div className="content-text tindak-lanjut">{item.tindak_lanjut}</div>
-                          ) : (
-                            <span className="text-muted">Belum ada tindak lanjut</span>
-                          )}
-                        </td>
-                        <td className="text-center">
-                          {getStatusBadge(item.status)}
-                        </td>
-                        <td className="text-center">
-                          {item.evidence_filename ? (
-                            <span className="evidence-indicator">
-                              📎 {item.evidence_filename}
-                            </span>
-                          ) : (
-                            <span className="text-muted">-</span>
-                          )}
-                        </td>
-                        <td className="text-center">
-                          {item.submitted_at ? formatDate(item.submitted_at) : '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Summary Cards at Top */}
+              <div className="items-summary-top">
+                <div className="summary-card success">
+                  <div className="summary-icon">✅</div>
+                  <div className="summary-content">
+                    <div className="summary-number">
+                      {matrixItems.filter(i => i.status === 'approved' || i.status === 'completed').length}
+                    </div>
+                    <div className="summary-label">Selesai</div>
+                  </div>
+                </div>
+                <div className="summary-card info">
+                  <div className="summary-icon">📤</div>
+                  <div className="summary-content">
+                    <div className="summary-number">
+                      {matrixItems.filter(i => i.status === 'submitted').length}
+                    </div>
+                    <div className="summary-label">Submitted</div>
+                  </div>
+                </div>
+                <div className="summary-card warning">
+                  <div className="summary-icon">⏳</div>
+                  <div className="summary-content">
+                    <div className="summary-number">
+                      {matrixItems.filter(i => i.status === 'pending').length}
+                    </div>
+                    <div className="summary-label">Pending</div>
+                  </div>
+                </div>
+                <div className="summary-card primary">
+                  <div className="summary-icon">📎</div>
+                  <div className="summary-content">
+                    <div className="summary-number">
+                      {matrixItems.filter(i => i.evidence_filename).length}
+                    </div>
+                    <div className="summary-label">Dengan Evidence</div>
+                  </div>
+                </div>
               </div>
 
-              <div className="items-summary">
-                <div className="summary-card">
-                  <h4>✅ Selesai</h4>
-                  <div className="summary-number">
-                    {matrixItems.filter(i => i.status === 'approved' || i.status === 'completed').length}
+              {/* Items as Cards */}
+              <div className="items-grid">
+                {matrixItems.map((item) => (
+                  <div key={item.id} className={`item-card status-${item.status}`}>
+                    <div className="item-card-header">
+                      <div className="item-number">
+                        <span className="number-badge">#{item.item_number}</span>
+                      </div>
+                      <div className="item-status">
+                        {getStatusBadge(item.status)}
+                      </div>
+                    </div>
+
+                    <div className="item-card-body">
+                      <div className="item-section">
+                        <h4 className="section-title">🔍 Temuan</h4>
+                        <p className="section-content">{item.temuan}</p>
+                      </div>
+
+                      {item.penyebab && (
+                        <div className="item-section">
+                          <h4 className="section-title">⚠️ Penyebab</h4>
+                          <p className="section-content">{item.penyebab}</p>
+                        </div>
+                      )}
+
+                      <div className="item-section">
+                        <h4 className="section-title">💡 Rekomendasi</h4>
+                        <p className="section-content">{item.rekomendasi}</p>
+                      </div>
+
+                      {item.tindak_lanjut ? (
+                        <div className="item-section highlight">
+                          <h4 className="section-title">✅ Tindak Lanjut</h4>
+                          <p className="section-content tindak-lanjut">{item.tindak_lanjut}</p>
+                        </div>
+                      ) : (
+                        <div className="item-section empty">
+                          <h4 className="section-title">⏳ Tindak Lanjut</h4>
+                          <p className="section-content muted">Belum ada tindak lanjut dari OPD</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="item-card-footer">
+                      <div className="footer-info">
+                        {item.evidence_filename ? (
+                          <div className="evidence-info">
+                            <span className="evidence-icon">📎</span>
+                            <span className="evidence-name">{item.evidence_filename}</span>
+                          </div>
+                        ) : (
+                          <div className="evidence-info empty">
+                            <span className="evidence-icon">📎</span>
+                            <span className="evidence-name">Belum ada evidence</span>
+                          </div>
+                        )}
+                      </div>
+                      {item.submitted_at && (
+                        <div className="footer-date">
+                          <span className="date-icon">📅</span>
+                          <span className="date-text">{formatDate(item.submitted_at)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="summary-card">
-                  <h4>📤 Submitted</h4>
-                  <div className="summary-number">
-                    {matrixItems.filter(i => i.status === 'submitted').length}
-                  </div>
-                </div>
-                <div className="summary-card">
-                  <h4>⏳ Pending</h4>
-                  <div className="summary-number">
-                    {matrixItems.filter(i => i.status === 'pending').length}
-                  </div>
-                </div>
-                <div className="summary-card">
-                  <h4>📎 Dengan Evidence</h4>
-                  <div className="summary-number">
-                    {matrixItems.filter(i => i.evidence_filename).length}
-                  </div>
-                </div>
+                ))}
               </div>
             </>
           )}
